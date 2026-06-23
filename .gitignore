@@ -1,0 +1,5 @@
+.gradle-home/
+.idea/
+.tmp/
+_run_android*.log
+vietnam_chronogis/emulator_screen.png
