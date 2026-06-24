@@ -22,10 +22,20 @@ jobs:
           channel: stable
 
       - name: Install dependencies
+        working-directory: vietnam_chronogis
         run: flutter pub get
 
+      - name: Check formatting
+        working-directory: vietnam_chronogis
+        run: dart format --output=none --set-exit-if-changed .
+
       - name: Analyze
+        working-directory: vietnam_chronogis
         run: flutter analyze
+
+      - name: Test
+        working-directory: vietnam_chronogis
+        run: flutter test
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
