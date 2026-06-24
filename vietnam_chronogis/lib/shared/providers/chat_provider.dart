@@ -10,6 +10,10 @@ import '../models/timeline_era.dart';
 import 'timeline_provider.dart';
 import 'map_provider.dart';
 
+final aiChatConfiguredProvider = Provider<bool>((ref) {
+  return ref.watch(groqApiKeyConfiguredProvider);
+});
+
 final chatMessagesProvider = StreamProvider<List<ChatMessage>>((ref) {
   final repo = ref.watch(chatRepositoryProvider);
   return repo.watchMessages();
@@ -41,6 +45,7 @@ final currentChatContextProvider = FutureProvider<ChatContext>((ref) async {
 final suggestedQuestionsProvider = FutureProvider<List<String>>((ref) async {
   final context = await ref.watch(currentChatContextProvider.future);
   final groq = ref.watch(groqServiceProvider);
+  if (groq == null) return _fallbackSuggestedQuestions(context);
   return groq.generateSuggestedQuestions(context);
 });
 
@@ -53,7 +58,7 @@ final chatNotifierProvider = NotifierProvider<ChatNotifier, List<ChatMessage>>(
 // - Không cần inject GroqService, ChatRepository, Ref qua constructor nữa
 // - Dùng ref trực tiếp bên trong Notifier
 class ChatNotifier extends Notifier<List<ChatMessage>> {
-  late GroqService _groqService;
+  GroqService? _groqService;
   late ChatRepository _repository;
   final _uuid = const Uuid();
 
@@ -77,6 +82,20 @@ class ChatNotifier extends Notifier<List<ChatMessage>> {
 
     await _repository.saveMessage(userMessage);
 
+    final groqService = _groqService;
+    if (groqService == null) {
+      await _repository.saveMessage(
+        ChatMessage(
+          id: _uuid.v4(),
+          role: MessageRole.assistant,
+          content:
+              'AI chưa cấu hình. Hãy chạy app với --dart-define=GROQ_API_KEY=... để bật Groq chat.',
+          timestamp: DateTime.now(),
+        ),
+      );
+      return;
+    }
+
     final aiMessageId = _uuid.v4();
     final aiMessage = ChatMessage(
       id: aiMessageId,
@@ -92,7 +111,7 @@ class ChatNotifier extends Notifier<List<ChatMessage>> {
     try {
       // FIX: dùng ref.read thay vì _ref.read
       final chatContext = await ref.read(currentChatContextProvider.future);
-      final stream = _groqService.sendMessage(text, context: chatContext);
+      final stream = groqService.sendMessage(text, context: chatContext);
 
       String accumulatedContent = '';
 
@@ -128,4 +147,14 @@ class ChatNotifier extends Notifier<List<ChatMessage>> {
     await _repository.clearHistory();
     state = [];
   }
+}
+
+List<String> _fallbackSuggestedQuestions(ChatContext context) {
+  return [
+    if (context.selectedProvinceMa != null)
+      'Quá trình sáp nhập của tỉnh này diễn ra như thế nào?',
+    'Năm ${context.currentYear} có sự kiện hành chính nào nổi bật?',
+    'Vì sao số lượng tỉnh thành thay đổi trong giai đoạn này?',
+    'Giai đoạn ${context.currentEra} có ý nghĩa gì?',
+  ];
 }

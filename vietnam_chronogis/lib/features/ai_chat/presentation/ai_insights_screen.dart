@@ -36,6 +36,7 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(chatMessagesProvider);
     final tempMessages = ref.watch(chatNotifierProvider);
+    final isAiConfigured = ref.watch(aiChatConfiguredProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFF12151C),
@@ -55,6 +56,7 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
       ),
       body: Column(
         children: [
+          if (!isAiConfigured) _buildUnconfiguredBanner(),
           Expanded(
             child: messagesAsync.when(
               data: (dbMessages) {
@@ -65,8 +67,9 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
 
                 if (displayMessages.isEmpty) return _buildEmptyState();
 
-                WidgetsBinding.instance
-                    .addPostFrameCallback((_) => _scrollToBottom());
+                WidgetsBinding.instance.addPostFrameCallback(
+                  (_) => _scrollToBottom(),
+                );
 
                 return ListView.builder(
                   controller: _scrollController,
@@ -76,16 +79,37 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
                       ChatMessageBubble(message: displayMessages[index]),
                 );
               },
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               // FIX: error: (_, _) duplicate wildcard → (_, stackTrace)
               error: (error, stackTrace) => Center(
-                child: Text('Lỗi: $error',
-                    style: const TextStyle(color: Colors.red)),
+                child: Text(
+                  'Lỗi: $error',
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ),
           ),
           const ChatInputBar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnconfiguredBanner() {
+    return Container(
+      width: double.infinity,
+      color: const Color(0xFF2A2118),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: const Row(
+        children: [
+          Icon(Icons.info_outline, color: Color(0xFFFFB74D), size: 20),
+          SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'AI chưa cấu hình. Thêm GROQ_API_KEY bằng Dart define để bật Groq chat.',
+              style: TextStyle(color: Color(0xFFFFE0B2), fontSize: 13),
+            ),
+          ),
         ],
       ),
     );
@@ -96,13 +120,18 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history_edu,
-              size: 64, color: Colors.white.withValues(alpha: 0.2)),
+          Icon(
+            Icons.history_edu,
+            size: 64,
+            color: Colors.white.withValues(alpha: 0.2),
+          ),
           const SizedBox(height: 16),
           Text(
             'Hỏi AI về lịch sử hành chính Việt Nam',
             style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.5), fontSize: 16),
+              color: Colors.white.withValues(alpha: 0.5),
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 24),
           _buildSuggestionChips(),
@@ -123,9 +152,13 @@ class _AiInsightsScreenState extends ConsumerState<AiInsightsScreen> {
           return ActionChip(
             backgroundColor: const Color(0xFF1E2128),
             side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
-            label: Text(text,
-                style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.8), fontSize: 13)),
+            label: Text(
+              text,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.8),
+                fontSize: 13,
+              ),
+            ),
             onPressed: () =>
                 ref.read(chatNotifierProvider.notifier).sendMessage(text),
           );

@@ -33,12 +33,17 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
   Widget build(BuildContext context) {
     final chatContextAsync = ref.watch(currentChatContextProvider);
     final messages = ref.watch(chatNotifierProvider);
+    final isAiConfigured = ref.watch(aiChatConfiguredProvider);
     final isStreaming = messages.isNotEmpty && messages.last.isStreaming;
+    final canSubmit =
+        isAiConfigured && !isStreaming && _controller.text.trim().isNotEmpty;
 
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1D23),
-        border: Border(top: BorderSide(color: Colors.white.withValues(alpha: 0.05))),
+        border: Border(
+          top: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
+        ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(
@@ -62,7 +67,7 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
             loading: () => const SizedBox.shrink(),
             error: (e, s) => const SizedBox.shrink(),
           ),
-          
+
           Row(
             children: [
               Expanded(
@@ -70,7 +75,9 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                   decoration: BoxDecoration(
                     color: const Color(0xFF12151C),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -78,12 +85,18 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
                         child: TextField(
                           controller: _controller,
                           focusNode: _focusNode,
+                          enabled: isAiConfigured,
                           style: const TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'Hỏi về lịch sử hành chính...',
-                            hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                            hintStyle: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.3),
+                            ),
                             border: InputBorder.none,
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
                           ),
                           onSubmitted: (_) => _submit(),
                           onChanged: (_) => setState(() {}),
@@ -105,17 +118,15 @@ class _ChatInputBarState extends ConsumerState<ChatInputBar> {
               const SizedBox(width: 12),
               Container(
                 decoration: BoxDecoration(
-                  color: isStreaming || _controller.text.trim().isEmpty
+                  color: !canSubmit
                       ? Colors.white.withValues(alpha: 0.1)
                       : const Color(0xFF2D5A8E),
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
                   icon: const Icon(Icons.send),
-                  color: isStreaming || _controller.text.trim().isEmpty
-                      ? Colors.white38
-                      : Colors.white,
-                  onPressed: isStreaming || _controller.text.trim().isEmpty ? null : _submit,
+                  color: canSubmit ? Colors.white : Colors.white38,
+                  onPressed: canSubmit ? _submit : null,
                 ),
               ),
             ],

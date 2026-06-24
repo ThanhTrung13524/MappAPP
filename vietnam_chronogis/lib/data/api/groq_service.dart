@@ -5,15 +5,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/chat_context.dart';
 
-final groqServiceProvider = Provider<GroqService>((ref) {
-  const apiKey = String.fromEnvironment(
-    'GROQ_API_KEY',
-    defaultValue: '',
-  );
+final groqApiKeyProvider = Provider<String>((ref) {
+  const apiKey = String.fromEnvironment('GROQ_API_KEY', defaultValue: '');
 
-  if (apiKey.isEmpty) {
-    throw Exception('GROQ_API_KEY is not set');
-  }
+  return apiKey;
+});
+
+final groqApiKeyConfiguredProvider = Provider<bool>((ref) {
+  return ref.watch(groqApiKeyProvider).trim().isNotEmpty;
+});
+
+final groqServiceProvider = Provider<GroqService?>((ref) {
+  final apiKey = ref.watch(groqApiKeyProvider).trim();
+  if (apiKey.isEmpty) return null;
 
   return GroqService(apiKey);
 });
