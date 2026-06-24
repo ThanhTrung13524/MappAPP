@@ -28,9 +28,9 @@ class SchoolRepository {
     required SchoolDao schoolDao,
     required AdministrativeUnitDao unitDao,
     required OverpassApiClient overpassClient,
-  })  : _schoolDao = schoolDao,
-        _unitDao = unitDao,
-        _overpassClient = overpassClient;
+  }) : _schoolDao = schoolDao,
+       _unitDao = unitDao,
+       _overpassClient = overpassClient;
 
   Stream<double> seedSchools({
     CancelToken? cancelToken,
@@ -52,6 +52,7 @@ class SchoolRepository {
       final provinces = await _unitDao.getAllProvinces();
       final totalCells = cols * rows;
       var completedCells = 0;
+      var hadCellError = false;
       final seen = <int>{};
 
       for (var r = 0; r < rows; r++) {
@@ -74,6 +75,7 @@ class SchoolRepository {
               cacheTtl: const Duration(days: 7),
             );
           } catch (e) {
+            hadCellError = true;
             debugPrint('SchoolRepository: cell fetch error ($c,$r): $e');
           }
 
@@ -116,8 +118,18 @@ class SchoolRepository {
         }
       }
 
+      final persistedCount = await _schoolDao.count();
+      if (persistedCount == 0) {
+        throw StateError('School seed finished without persisted POIs.');
+      }
+      if (hadCellError) {
+        throw StateError(
+          'School seed incomplete; persisted $persistedCount POIs and will retry later.',
+        );
+      }
+
       await prefs.setBool('seeded_schools_v1', true);
-      debugPrint('SchoolRepository: seeded ${seen.length} THPT schools');
+      debugPrint('SchoolRepository: seeded $persistedCount THPT schools');
       yield 1.0;
     } catch (e) {
       debugPrint('SchoolRepository seed error: $e');
@@ -133,8 +145,12 @@ class SchoolRepository {
 
   String _detectSchoolType(OverpassPlace place) {
     final name = place.name.toLowerCase();
-    if (name.contains('chuyên') || name.contains('chuyen')) return 'specialized';
-    if (name.contains('quốc tế') || name.contains('quoc te')) return 'international';
+    if (name.contains('chuyên') || name.contains('chuyen')) {
+      return 'specialized';
+    }
+    if (name.contains('quốc tế') || name.contains('quoc te')) {
+      return 'international';
+    }
     if (name.contains('thpt') ||
         name.contains('trung học phổ thông') ||
         name.contains('trung hoc pho thong')) {
@@ -168,7 +184,8 @@ class SchoolRepository {
     const r = 6371.0;
     final dLat = _deg2rad(lat2 - lat1);
     final dLon = _deg2rad(lon2 - lon1);
-    final a = sin(dLat / 2) * sin(dLat / 2) +
+    final a =
+        sin(dLat / 2) * sin(dLat / 2) +
         cos(_deg2rad(lat1)) *
             cos(_deg2rad(lat2)) *
             sin(dLon / 2) *

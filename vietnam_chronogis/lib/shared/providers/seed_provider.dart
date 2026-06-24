@@ -121,7 +121,9 @@ final seedInitializationProvider = FutureProvider<bool>((ref) async {
   }
 
   if (hasTourismSeeded) {
-    final existingTourismCount = await ref.read(tourismRepositoryProvider).count();
+    final existingTourismCount = await ref
+        .read(tourismRepositoryProvider)
+        .count();
     if (existingTourismCount == 0) {
       debugPrint(
         'Seed: tourism flag is true but DB has 0 POIs; forcing tourism reseed.',
@@ -209,19 +211,25 @@ final seedInitializationProvider = FutureProvider<bool>((ref) async {
     setProgress(0.95);
     final schoolRepo = ref.read(schoolRepositoryProvider);
     try {
-      await for (final progress in schoolRepo
-          .seedSchools(validator: vietnamValidator)
-          .timeout(const Duration(seconds: 25))) {
+      await for (final progress
+          in schoolRepo
+              .seedSchools(validator: vietnamValidator)
+              .timeout(const Duration(seconds: 25))) {
         setProgress(0.95 + progress * 0.05);
       }
       final schoolCount = await schoolRepo.count();
-      setMsg('Da tai $schoolCount truong THPT.');
-      await prefs.setBool('seeded_schools_v1', true);
+      if (schoolCount > 0) {
+        setMsg('Da tai $schoolCount truong THPT.');
+        await prefs.setBool('seeded_schools_v1', true);
+      } else {
+        setMsg('Khong tai duoc du lieu truong hoc. Se thu lai lan sau.');
+        await prefs.setBool('seeded_schools_v1', false);
+      }
     } catch (e) {
       debugPrint('Seed schools failed: $e');
-      setMsg('Khong tai duoc du lieu truong hoc. Co the thu lai sau.');
+      setMsg('Khong tai duoc du lieu truong hoc. Se thu lai lan sau.');
       // Khong chan UI khi emulator/mat mang: bo qua va vao app chinh.
-      await prefs.setBool('seeded_schools_v1', true);
+      await prefs.setBool('seeded_schools_v1', false);
     }
     setProgress(1.0);
   }
