@@ -9,9 +9,10 @@ Implemented:
 - Firebase Core optional bootstrap.
 - Firebase Auth with Google sign-in/logout.
 - Firestore repositories and domain models for users, managed schools, campaigns, events, participants, and check-ins.
-- Firebase Functions callable `validateEventCheckIn`.
-- Firebase App Check activation attempt.
+- Firebase Functions callable `checkInEvent` with legacy `validateEventCheckIn` alias.
 - Firestore rules and empty indexes file.
+- Local Firebase Emulator Suite configuration for Auth, Firestore, Functions, and UI.
+- Firestore Rules emulator tests.
 
 Not committed:
 
@@ -27,9 +28,9 @@ Not committed:
 | --- | --- | --- | --- | --- |
 | Firebase Core | Yes | Optional bootstrap in `main.dart` | Enables Firebase services when config exists. | Missing real client config. |
 | Authentication | Yes | Via Firebase Core | Google sign-in/logout and auth state. | Google provider must be enabled in Firebase Console. |
-| Firestore | Yes | Via providers | Users, managed schools, campaigns, events, participants. | Rules added, not emulator-tested/deployed. |
-| Cloud Functions | Yes | Via providers | Callable `validateEventCheckIn`. | Functions source added, not deployed. |
-| App Check | Yes | Debug provider activation attempted when Firebase is configured. | Callable can enforce App Check via `ENFORCE_APP_CHECK=true`. | Production provider setup still required. |
+| Firestore | Yes | Via providers | Users, managed schools, campaigns, events, participants. | Rules emulator tests pass locally; not deployed to a real project. |
+| Cloud Functions | Yes | Via providers | Callable `checkInEvent` in `asia-southeast1`. | Functions source builds and core tests pass; not deployed. |
+| App Check | Yes | Not initialized in Flutter source yet. | Callable can enforce App Check via `ENFORCE_APP_CHECK=true`. | Production provider setup still required. |
 | Messaging | No | No | Notifications not implemented. | Missing. |
 | Storage | No | No | Not used. | Missing. |
 | Analytics/Crashlytics/Remote Config | No | No | Not used. | Missing. |
@@ -74,18 +75,20 @@ Client repositories:
 `firestore.rules` currently enforces:
 
 - Self-only profile reads/limited updates.
-- Admin-only managed school writes.
+- Active user managed school create and creator/admin update/delete policy.
 - Signed-in users can create campaigns where they are owner.
-- Campaign managers can create/update events.
+- Campaign managers can create/update campaigns/events with field shape restrictions.
 - Users can create their own pending participant request.
 - Managers can approve/reject participants.
 - Direct client writes to check-in documents are denied.
 
-Rules were not emulator-tested because `firebase-tools` is not installed and `npx firebase-tools@latest --version` timed out after 5 minutes.
+Rules are emulator-tested with local `firebase-tools` from the `functions` package:
+
+- `npm run test:rules:emulator`: passed on 2026-07-07 with Firestore Emulator port `18080`.
 
 ## Cloud Functions
 
-`functions/src/index.ts` exports `validateEventCheckIn` in region `asia-southeast1`.
+`functions/src/index.ts` exports `checkInEvent` and legacy alias `validateEventCheckIn` in region `asia-southeast1`.
 
 Function behavior:
 
@@ -102,9 +105,12 @@ Function behavior:
 
 Verification:
 
-- `npm install`: passed, with 8 moderate audit findings and Node v25 vs target Node 20 warning.
+- `npm install`: passed, with audit findings and Node v25.2.1 vs target Node 20 warning after adding emulator/rules test tooling.
+- `npm audit --audit-level=high`: passed, with 11 moderate findings and no high/critical findings.
 - `npm run lint`: passed.
-- `npm test`: passed 3 Node tests.
+- `npm run build`: passed.
+- `npm test`: passed 14 Node tests.
+- `npm run test:rules:emulator`: passed 7 Firestore Rules emulator tests.
 
 ## Secrets and API keys
 
@@ -117,7 +123,7 @@ Verification:
 1. Choose official Android/iOS/macOS identifiers.
 2. Create Firebase project/apps and add official config files outside this task's placeholder-free implementation.
 3. Enable Google sign-in provider.
-4. Deploy Firestore rules and Functions.
-5. Run Firestore rules emulator tests once Firebase CLI is available.
+4. Deploy Firestore rules and Functions after project identity is confirmed.
+5. Add callable emulator tests for the full HTTPS callable transaction path.
 6. Decide production App Check providers and enforcement policy.
 7. Add FCM only if notifications are required.

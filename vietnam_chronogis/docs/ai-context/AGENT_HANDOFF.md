@@ -61,6 +61,10 @@ Main flow:
 - Campaigns tab added to the shell.
 - Cloud Function `checkInEvent` added with `validateEventCheckIn` kept as a legacy alias.
 - Firestore rules added and direct client check-in writes denied.
+- Firestore Emulator Suite config added to `firebase.json`.
+- Firestore Rules emulator tests added and passing.
+- Check-in Function core tests expanded and passing.
+- Flutter Functions provider uses region `asia-southeast1` and supports opt-in local emulator connection with Dart defines.
 - Firebase Campaign/Event/check-in field contracts aligned on 2026-07-07:
   managed school writes `location: GeoPoint` and `active`, event writes `schoolId`,
   participant rules use `userId`/`approvedAt`/`approvedBy`, and callable results
@@ -72,11 +76,12 @@ Main flow:
 
 - Real Firebase config files are not present.
 - Google sign-in has not been tested against a real Firebase project.
-- Firestore rules have not been emulator-tested.
+- Firestore rules are emulator-tested locally, but not deployed to a real Firebase project.
 - Functions have not been deployed.
+- Callable `checkInEvent` has core unit coverage, but not full HTTPS callable emulator/deploy coverage.
 - Notifications/FCM are not implemented.
 - Production Android/iOS/macOS identifiers are still not chosen.
-- Map performance work is the next active phase.
+- Event map integration is still missing.
 
 ## Verification on 2026-07-07
 
@@ -87,11 +92,11 @@ Main flow:
 - `dart format --output=none --set-exit-if-changed .`: passed.
 - `flutter analyze`: passed.
 - `flutter test --reporter expanded`: passed with 34 tests.
-- `npm install` in `functions/`: passed with 9 moderate audit findings and Node v25.2.1 vs target Node 20 warning.
+- `npm install` in `functions/`: passed with audit findings and Node v25.2.1 vs target Node 20 warning; latest `npm audit --audit-level=high` passed with 11 moderate findings and no high/critical findings.
 - `npm run lint` in `functions/`: passed.
 - `npm run build` in `functions/`: passed.
-- `npm test` in `functions/`: passed with 3 Node tests.
-- Firebase CLI/emulator verification has not been run in this phase.
+- `npm test` in `functions/`: passed with 14 Node tests.
+- `npm run test:rules:emulator` in `functions/`: passed with 7 Firestore Rules emulator tests.
 
 ## Do not break
 
@@ -104,10 +109,10 @@ Main flow:
 
 ## Next recommended task
 
-Configure a real Firebase project or emulator suite and run end-to-end verification:
+Configure a real Firebase project and run end-to-end verification:
 
 1. Add real Firebase client config files outside secrets policy mistakes.
 2. Enable Google Sign-In and deploy/test `checkInEvent`.
-3. Run Firestore Rules emulator tests for user, managed school, campaign, event,
-   participant approval, and denied direct check-in writes.
+3. Add full HTTPS callable emulator/deployed tests for transaction/auth behavior.
 4. Manually verify `/seed`, `/map`, Explorer, Schools, AI, Campaigns, and OSRM.
+5. Add Event markers/detail/check-in UX to the map when the product phase resumes.

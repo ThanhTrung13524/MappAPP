@@ -77,6 +77,13 @@ Verified locally:
 - `npm run build` in `functions/`
 - `npm test` in `functions/` with 3 Node tests passing
 
-Still blocked:
+Verified in Phase 10:
 
-- Real Google Sign-In, Firestore writes, callable check-in, and Firestore Rules behavior require Firebase client config and either a deployed backend or emulator test suite.
+- Firestore Emulator Suite configuration was added to `firebase.json`.
+- Firestore Rules authorization tests were added and passed with `npm run test:rules:emulator`.
+- Check-in Function core tests were expanded and passed with `npm test`.
+- Flutter Cloud Functions provider now uses the backend region `asia-southeast1` and can opt into local emulators through Dart defines.
+
+Still blocked after Phase 10:
+
+- Real Google Sign-In, Firestore writes, callable check-in, deploy, and App Check production verification require a real Firebase project, FlutterFire config files, and device testing.

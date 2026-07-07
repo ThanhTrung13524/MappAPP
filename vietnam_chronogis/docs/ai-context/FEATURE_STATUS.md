@@ -16,11 +16,11 @@ Status values are limited to: `Complete`, `Partial`, `Missing`, `Broken`, `Unkno
 | Join Campaign | Partial | `campaign_participant.dart`, `participant_repository.dart` | Firestore participants | Analyze/test pass | Creates pending request using `userId`; rules aligned to this field. |
 | Participant approval | Partial | `participant_repository.dart`, `campaigns_screen.dart` | Firestore participants | Analyze/test pass | Owner/organizer workflow uses `approvedAt`/`approvedBy`; rules aligned to those fields. |
 | Campaign roles | Partial | `campaign_participant.dart`, `firestore.rules`, Function | Firestore + Functions | Analyze/test pass | Roles: owner, organizer, staff, participant. |
-| Check-in | Partial | `check_in_repository.dart`, `check_in_models.dart`, `campaigns_screen.dart` | Cloud Function + Firestore | Flutter validator tests, contract tests, Functions tests | Client calls `checkInEvent`; Function also exports legacy `validateEventCheckIn`; direct client check-in writes denied. |
+| Check-in | Partial | `check_in_repository.dart`, `check_in_models.dart`, `campaigns_screen.dart` | Cloud Function + Firestore | Flutter validator tests, contract tests, Functions core tests | Client calls `checkInEvent`; Function also exports legacy `validateEventCheckIn`; direct client check-in writes denied. |
 | Location validation | Partial | `check_in_validator.dart`, `functions/src/checkInValidation.ts` | Client helper + Cloud Function | Flutter and Node tests pass | Radius/time helpers tested; end-to-end GPS/Firebase not tested. |
 | Check-in history | Partial | Firestore check-in subcollection | Firestore | Function build/test pass | Function writes history records; UI does not yet show history list. |
-| Security rules | Partial | `firestore.rules`, `firestore.indexes.json` | Firestore Rules | Analyze/test pass; not emulator-tested | Rules aligned to current app field names, but Firebase emulator verification is still missing. |
-| App Check | Partial | `firebase_bootstrap.dart`, `functions/src/index.ts` | App Check | Analyze/build pass | Debug activation attempt exists; production provider/enforcement not configured. |
+| Security rules | Partial | `firestore.rules`, `firestore.indexes.json` | Firestore Rules | Firestore Emulator tests pass | Rules aligned to current app field names and tested locally; not deployed to a real Firebase project. |
+| App Check | Partial | `pubspec.yaml`, `functions/src/index.ts` | App Check | Analyze/build pass | Dependency exists and Function can enforce via env; Flutter App Check activation and production provider are not configured. |
 | Notifications | Missing | None | None | None | FCM not implemented in this task. |
 
 ## Implemented ChronoGIS app features
@@ -52,7 +52,8 @@ Status values are limited to: `Complete`, `Partial`, `Missing`, `Broken`, `Unkno
 | `dart format --output=none --set-exit-if-changed .` | Passed. |
 | `flutter analyze` | Passed. No issues found. |
 | `flutter test --reporter expanded` | Passed. 34 tests passed. |
-| `npm install` in `functions/` | Passed, with 9 moderate npm audit findings and local Node v25.2.1 vs target Node 20 warning. |
+| `npm install` in `functions/` | Passed, with npm audit findings and local Node v25.2.1 vs target Node 20 warning after adding emulator/rules test tooling. Latest `npm audit --audit-level=high` passed with 11 moderate findings and no high/critical findings. |
 | `npm run lint` in `functions/` | Passed. |
 | `npm run build` in `functions/` | Passed. |
-| `npm test` in `functions/` | Passed. 3 Node tests passed. |
+| `npm test` in `functions/` | Passed. 14 Node tests passed. |
+| `npm run test:rules:emulator` in `functions/` | Passed. 7 Firestore Rules emulator tests passed. |

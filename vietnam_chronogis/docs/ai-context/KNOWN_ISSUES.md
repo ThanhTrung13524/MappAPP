@@ -12,13 +12,13 @@ Suggested direction: Choose official app identifiers, create Firebase apps, add 
 
 ## ISSUE-002
 
-ID: ISSUE-002  
-Severity: Medium  
-Title: Firestore rules are authored but not emulator-tested  
-Evidence: `firestore.rules` exists, but Firebase CLI is unavailable. `firebase --version` failed and `npx firebase-tools@latest --version` timed out after 5 minutes on 2026-06-24.  
+ID: ISSUE-002
+Severity: Resolved
+Title: Firestore rules are covered by local emulator tests
+Evidence: `firestore.rules` exists and `npm run test:rules:emulator` passed on 2026-07-07 with 7 Firestore Rules emulator tests covering user profile, managed school, campaign/event authorization, campaign owner bootstrap, participant approval/role, and direct check-in write denial.
 Affected files: `firestore.rules`, `firestore.indexes.json`  
-Impact: Syntax/authorization behavior has not been verified by emulator tests.  
-Suggested direction: Install Firebase CLI or add rules-unit-testing setup, then test user/admin/participant/check-in denial paths. Rules were field-aligned to the app on 2026-07-07, but emulator proof is still missing.
+Impact: Resolved for local emulator coverage; real project deployment is still tracked by ISSUE-011.
+Suggested direction: Add the rules emulator command to CI and keep expanding cases as Campaign/Event edit workflows grow.
 
 ## ISSUE-003
 
@@ -105,10 +105,10 @@ Suggested direction: Add widget test for the unconfigured AI banner.
 ID: ISSUE-011  
 Severity: Medium  
 Title: Firebase end-to-end flows are not verified against a real backend  
-Evidence: Flutter tests and Functions tests pass locally, but no Firebase config/project is present.  
+Evidence: Flutter tests, Functions tests, and Firestore Rules emulator tests pass locally, but no Firebase config/project is present.
 Affected files: `features/auth`, `features/campaigns`, `features/check_in`, `functions/`  
 Impact: Google sign-in, Firestore writes, callable check-in, and rules behavior may need adjustments once connected to a real Firebase project.  
-Suggested direction: Configure Firebase project and run emulator/integration tests before release. On 2026-07-07 the Flutter/Functions contracts were aligned for managed schools, campaign events, participants, and callable check-in, but real backend verification is still blocked.
+Suggested direction: Configure Firebase project and run deployed/integration tests before release. On 2026-07-07 local emulator/function coverage was added, but real backend verification is still blocked.
 
 ## ISSUE-012
 
@@ -125,10 +125,10 @@ Suggested direction: Normalize encodings/content in a separate cleanup.
 ID: ISSUE-013  
 Severity: Medium  
 Title: Functions dependency tree has npm audit findings  
-Evidence: `npm install` in `functions/` passed but reported 9 moderate vulnerabilities on 2026-07-07, with local Node v25.2.1 while `functions/package.json` targets Node 20.
+Evidence: `npm install` in `functions/` passed with audit findings after adding local Firebase emulator/rules test tooling. Latest `npm audit --audit-level=high` passed on 2026-07-07 with 11 moderate findings and no high/critical findings; local Node v25.2.1 differs from the Functions Node 20 target.
 Affected files: `functions/package-lock.json`, `functions/package.json`  
 Impact: Dependency risk should be reviewed before deployment.  
-Suggested direction: Run `npm audit`, review fixes, and avoid breaking Firebase Functions compatibility.
+Suggested direction: Review moderate `npm audit` fixes and avoid breaking Firebase Functions compatibility.
 
 ## ISSUE-014
 
