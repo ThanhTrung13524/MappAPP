@@ -57,23 +57,24 @@ class SchoolsScreen extends ConsumerWidget {
                       final school = schools[index];
                       return _SchoolCard(
                         school: school,
-                        onTap: () =>
-                            ref.read(selectedSchoolProvider.notifier).select(school),
+                        onTap: () => ref
+                            .read(selectedSchoolProvider.notifier)
+                            .select(school),
                       );
                     },
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(
-                  child: Text('Lỗi: $e', style: const TextStyle(color: Colors.redAccent)),
+                  child: Text(
+                    'Lỗi: $e',
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
                 ),
               ),
             ),
             if (selected != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: SchoolPopup(),
-              ),
+              Padding(padding: const EdgeInsets.all(16), child: SchoolPopup()),
           ],
         ),
       ),
@@ -106,7 +107,11 @@ class _SchoolCard extends StatelessWidget {
                   color: const Color(0xFF1565C0).withValues(alpha: 0.25),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.school, color: Color(0xFF64B5F6), size: 22),
+                child: const Icon(
+                  Icons.school,
+                  color: Color(0xFF64B5F6),
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -126,7 +131,10 @@ class _SchoolCard extends StatelessWidget {
                         schoolTypeLabel(school.schoolType),
                         if (school.provinceName != null) school.provinceName,
                       ].join(' • '),
-                      style: const TextStyle(color: Color(0xFF9AA0B0), fontSize: 12),
+                      style: const TextStyle(
+                        color: Color(0xFF9AA0B0),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),

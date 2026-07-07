@@ -122,7 +122,8 @@ class TourismRepository {
               p.lat,
               p.lon,
             );
-            final hasProvinceFallback = provinceMa != null &&
+            final hasProvinceFallback =
+                provinceMa != null &&
                 validator.isInsideVietnamBBox(p.lat, p.lon);
             if (!isInsideBoundary && !hasProvinceFallback) {
               rejectedBoundaryCount++;

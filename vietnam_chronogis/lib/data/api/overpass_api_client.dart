@@ -242,7 +242,8 @@ class OverpassApiClient {
   static bool _isThptSchool(OverpassPlace place) {
     final tags = place.tags;
     final name = place.name.toLowerCase();
-    final level = (tags['school:level'] ?? tags['isced:level'] ?? '').toLowerCase();
+    final level = (tags['school:level'] ?? tags['isced:level'] ?? '')
+        .toLowerCase();
 
     if (level == 'secondary' || level == '3') return true;
     if (name.contains('thpt') ||
@@ -251,7 +252,8 @@ class OverpassApiClient {
       return true;
     }
     if (tags['amenity'] == 'school' &&
-        (tags['school:FR'] == 'secondary' || tags['school:type'] == 'secondary')) {
+        (tags['school:FR'] == 'secondary' ||
+            tags['school:type'] == 'secondary')) {
       return true;
     }
     return false;

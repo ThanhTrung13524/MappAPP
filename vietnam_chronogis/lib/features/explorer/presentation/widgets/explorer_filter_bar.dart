@@ -40,10 +40,18 @@ class ExplorerFilterBar extends ConsumerWidget {
                     fontSize: 13,
                   ),
                   border: InputBorder.none,
-                  prefixIcon: const Icon(Icons.search, color: Colors.white38, size: 18),
+                  prefixIcon: const Icon(
+                    Icons.search,
+                    color: Colors.white38,
+                    size: 18,
+                  ),
                   suffixIcon: search.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(Icons.clear, color: Colors.white38, size: 16),
+                          icon: const Icon(
+                            Icons.clear,
+                            color: Colors.white38,
+                            size: 16,
+                          ),
                           onPressed: () {
                             searchController.clear();
                             ref.read(explorerSearchProvider.notifier).set('');
@@ -92,7 +100,10 @@ class _BarButton extends StatelessWidget {
           children: [
             Icon(icon, color: Colors.white54, size: 16),
             const SizedBox(width: 6),
-            Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+            Text(
+              label,
+              style: const TextStyle(color: Colors.white54, fontSize: 12),
+            ),
           ],
         ),
       ),

@@ -33,16 +33,10 @@ part 'app_database.g.dart';
     TourismPlaces,
     Schools,
   ],
-  daos: [
-    AdministrativeUnitDao,
-    GeoJsonDao,
-    ChatDao,
-    TourismDao,
-    SchoolDao,
-  ],
+  daos: [AdministrativeUnitDao, GeoJsonDao, ChatDao, TourismDao, SchoolDao],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
   int get schemaVersion => 3;

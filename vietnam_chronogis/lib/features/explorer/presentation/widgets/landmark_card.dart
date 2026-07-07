@@ -22,12 +22,12 @@ class _LandmarkCardState extends State<LandmarkCard> {
   Widget build(BuildContext context) {
     final place = widget.place;
     final color = tourismCategoryColor(place.category);
-    final icon  = tourismCategoryIcon(place.category);
+    final icon = tourismCategoryIcon(place.category);
     final label = tourismCategoryLabel(place.category);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
-      onExit:  (_) => setState(() => _hovered = false),
+      onExit: (_) => setState(() => _hovered = false),
       child: GestureDetector(
         onTap: widget.onTap,
         child: AnimatedContainer(
@@ -58,8 +58,9 @@ class _LandmarkCardState extends State<LandmarkCard> {
               Expanded(
                 flex: 3,
                 child: ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(11)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(11),
+                  ),
                   child: place.thumbnailUrl != null
                       ? Stack(
                           fit: StackFit.expand,
@@ -73,7 +74,9 @@ class _LandmarkCardState extends State<LandmarkCard> {
                             ),
                             // Bottom gradient
                             Positioned(
-                              bottom: 0, left: 0, right: 0,
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
                               child: Container(
                                 height: 48,
                                 decoration: BoxDecoration(
@@ -90,10 +93,13 @@ class _LandmarkCardState extends State<LandmarkCard> {
                             ),
                             if (place.category == 'worldHeritage')
                               Positioned(
-                                top: 8, right: 8,
+                                top: 8,
+                                right: 8,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 6, vertical: 3),
+                                    horizontal: 6,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.black.withValues(alpha: 0.65),
                                     borderRadius: BorderRadius.circular(8),
@@ -101,8 +107,11 @@ class _LandmarkCardState extends State<LandmarkCard> {
                                   child: const Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.emoji_events,
-                                          color: Color(0xFFFFD700), size: 10),
+                                      Icon(
+                                        Icons.emoji_events,
+                                        color: Color(0xFFFFD700),
+                                        size: 10,
+                                      ),
                                       SizedBox(width: 3),
                                       Text(
                                         'UNESCO',
@@ -163,7 +172,9 @@ class _LandmarkCardState extends State<LandmarkCard> {
                         Text(
                           place.name,
                           style: const TextStyle(
-                              color: Color(0xFF9AA0B0), fontSize: 11),
+                            color: Color(0xFF9AA0B0),
+                            fontSize: 11,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),

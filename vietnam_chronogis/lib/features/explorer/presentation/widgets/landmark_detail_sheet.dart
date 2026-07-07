@@ -51,11 +51,11 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
       return;
     }
     setState(() => _loadingWiki = true);
-    final repo    = ref.read(tourismRepositoryProvider);
+    final repo = ref.read(tourismRepositoryProvider);
     final updated = await repo.ensureWikiSummary(_place);
     if (mounted) {
       setState(() {
-        _place       = updated;
+        _place = updated;
         _loadingWiki = false;
       });
     }
@@ -64,7 +64,7 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
   @override
   Widget build(BuildContext context) {
     final color = tourismCategoryColor(_place.category);
-    final icon  = tourismCategoryIcon(_place.category);
+    final icon = tourismCategoryIcon(_place.category);
     final label = tourismCategoryLabel(_place.category);
 
     return Container(
@@ -103,15 +103,20 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
                               Text(
                                 _place.name,
                                 style: const TextStyle(
-                                    color: Color(0xFF9AA0B0), fontSize: 14),
+                                  color: Color(0xFF9AA0B0),
+                                  fontSize: 14,
+                                ),
                               ),
                             ],
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close,
-                            color: Colors.white38, size: 20),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.white38,
+                          size: 20,
+                        ),
                         onPressed: widget.onClose,
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
@@ -164,27 +169,35 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
                     Text(
                       _place.wikiSummary!,
                       style: const TextStyle(
-                          color: Color(0xFFCDD0D8), fontSize: 13, height: 1.65),
+                        color: Color(0xFFCDD0D8),
+                        fontSize: 13,
+                        height: 1.65,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       '— Wikipedia (EN)',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          fontSize: 10),
+                        color: Colors.white.withValues(alpha: 0.2),
+                        fontSize: 10,
+                      ),
                     ),
                   ] else if (_place.description != null)
                     Text(
                       _place.description!,
                       style: const TextStyle(
-                          color: Color(0xFFCDD0D8), fontSize: 13, height: 1.65),
+                        color: Color(0xFFCDD0D8),
+                        fontSize: 13,
+                        height: 1.65,
+                      ),
                     )
                   else
                     Text(
                       'No description available.',
                       style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.25),
-                          fontSize: 13),
+                        color: Colors.white.withValues(alpha: 0.25),
+                        fontSize: 13,
+                      ),
                     ),
 
                   // Meta
@@ -206,14 +219,16 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
                     const SizedBox(height: 10),
                     if (_place.openingHours != null)
                       _DetailRow(
-                          icon: Icons.access_time,
-                          label: 'Hours',
-                          value: _place.openingHours!),
+                        icon: Icons.access_time,
+                        label: 'Hours',
+                        value: _place.openingHours!,
+                      ),
                     if (_place.phone != null)
                       _DetailRow(
-                          icon: Icons.phone,
-                          label: 'Phone',
-                          value: _place.phone!),
+                        icon: Icons.phone,
+                        label: 'Phone',
+                        value: _place.phone!,
+                      ),
                     if (_place.website != null)
                       _DetailRow(
                         icon: Icons.language,
@@ -235,8 +250,10 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
                         icon: Icons.near_me,
                         color: const Color(0xFF1D9E75),
                         onTap: () => _openMaps(
-                            _place.lat, _place.lon,
-                            _place.nameEn ?? _place.name),
+                          _place.lat,
+                          _place.lon,
+                          _place.nameEn ?? _place.name,
+                        ),
                       ),
                       if (_place.website != null) ...[
                         const SizedBox(height: 8),
@@ -275,7 +292,9 @@ class _LandmarkDetailSheetState extends ConsumerState<LandmarkDetailSheet> {
                   _PlaceholderImg(color: color, icon: icon),
             ),
             Positioned(
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               child: Container(
                 height: 80,
                 decoration: BoxDecoration(
@@ -320,10 +339,7 @@ class _PlaceholderImg extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.3),
-            color.withValues(alpha: 0.06),
-          ],
+          colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.06)],
         ),
       ),
       child: Center(child: Icon(icon, color: color, size: 52)),
@@ -431,7 +447,9 @@ class _DetailRow extends StatelessWidget {
                     TextSpan(
                       text: '$label:  ',
                       style: const TextStyle(
-                          color: Colors.white38, fontSize: 12),
+                        color: Colors.white38,
+                        fontSize: 12,
+                      ),
                     ),
                     TextSpan(
                       text: value,
@@ -440,8 +458,7 @@ class _DetailRow extends StatelessWidget {
                             ? const Color(0xFF2D5A8E)
                             : const Color(0xFF9AA0B0),
                         fontSize: 12,
-                        decoration:
-                            isLink ? TextDecoration.underline : null,
+                        decoration: isLink ? TextDecoration.underline : null,
                       ),
                     ),
                   ],
@@ -490,9 +507,10 @@ class _BigActionBtn extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                  color: color,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600),
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -518,9 +536,10 @@ class _DetailSkeletonState extends State<_DetailSkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 900),
     )..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.04, end: 0.12).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _anim = Tween<double>(
+      begin: 0.04,
+      end: 0.12,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override

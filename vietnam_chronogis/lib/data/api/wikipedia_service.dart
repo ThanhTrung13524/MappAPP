@@ -29,11 +29,14 @@ class WikipediaService {
   final Dio _dio;
 
   WikipediaService({Dio? dio})
-      : _dio = dio ??
-            Dio(BaseOptions(
+    : _dio =
+          dio ??
+          Dio(
+            BaseOptions(
               connectTimeout: const Duration(seconds: 15),
               receiveTimeout: const Duration(seconds: 15),
-            ));
+            ),
+          );
 
   /// Lấy summary từ Wikipedia tiếng Anh.
   /// [titleOrWikidata]: có thể là tên trang (VD: "Ha_Long_Bay")
@@ -44,7 +47,8 @@ class WikipediaService {
       String wpTitle = titleOrWikidata;
       if (titleOrWikidata.startsWith('Q') &&
           int.tryParse(titleOrWikidata.substring(1)) != null) {
-        wpTitle = await _resolveWikidataToTitle(titleOrWikidata) ?? titleOrWikidata;
+        wpTitle =
+            await _resolveWikidataToTitle(titleOrWikidata) ?? titleOrWikidata;
       }
 
       final encoded = Uri.encodeComponent(wpTitle.replaceAll(' ', '_'));
@@ -60,11 +64,14 @@ class WikipediaService {
         title: data['title'] as String? ?? wpTitle,
         extract: _truncateExtract(extract, 400),
         thumbnailUrl: data['thumbnail']?['source'] as String?,
-        pageUrl: data['content_urls']?['desktop']?['page'] as String? ??
+        pageUrl:
+            data['content_urls']?['desktop']?['page'] as String? ??
             'https://en.wikipedia.org/wiki/$encoded',
       );
     } catch (e) {
-      debugPrint('WikipediaService: getSummary error for "$titleOrWikidata": $e');
+      debugPrint(
+        'WikipediaService: getSummary error for "$titleOrWikidata": $e',
+      );
       return null;
     }
   }
@@ -93,6 +100,8 @@ class WikipediaService {
     if (text.length <= maxChars) return text;
     // Cắt tại cuối câu gần nhất
     final cutIndex = text.lastIndexOf('. ', maxChars);
-    return cutIndex > 0 ? '${text.substring(0, cutIndex)}.' : '${text.substring(0, maxChars)}...';
+    return cutIndex > 0
+        ? '${text.substring(0, cutIndex)}.'
+        : '${text.substring(0, maxChars)}...';
   }
 }

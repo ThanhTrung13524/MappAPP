@@ -11,7 +11,9 @@ class SchoolPopup extends ConsumerWidget {
     final school = ref.watch(selectedSchoolProvider);
     if (school == null) return const SizedBox.shrink();
 
-    final statsAsync = ref.watch(schoolEducationStatsProvider(school.nemotronRegion));
+    final statsAsync = ref.watch(
+      schoolEducationStatsProvider(school.nemotronRegion),
+    );
 
     return Container(
       width: 320,
@@ -20,9 +22,15 @@ class SchoolPopup extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1D23).withValues(alpha: 0.97),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1565C0).withValues(alpha: 0.4)),
+        border: Border.all(
+          color: const Color(0xFF1565C0).withValues(alpha: 0.4),
+        ),
         boxShadow: const [
-          BoxShadow(color: Colors.black54, blurRadius: 16, offset: Offset(0, 6)),
+          BoxShadow(
+            color: Colors.black54,
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
         ],
       ),
       child: SingleChildScrollView(
@@ -46,7 +54,11 @@ class SchoolPopup extends ConsumerWidget {
                 IconButton(
                   onPressed: () =>
                       ref.read(selectedSchoolProvider.notifier).clear(),
-                  icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                  icon: const Icon(
+                    Icons.close,
+                    color: Colors.white54,
+                    size: 20,
+                  ),
                 ),
               ],
             ),
@@ -61,11 +73,17 @@ class SchoolPopup extends ConsumerWidget {
             ],
             if (school.address != null) ...[
               const SizedBox(height: 8),
-              Text(school.address!, style: const TextStyle(color: Colors.white70)),
+              Text(
+                school.address!,
+                style: const TextStyle(color: Colors.white70),
+              ),
             ],
             if (school.phone != null) ...[
               const SizedBox(height: 6),
-              Text('📞 ${school.phone}', style: const TextStyle(color: Colors.white70)),
+              Text(
+                '📞 ${school.phone}',
+                style: const TextStyle(color: Colors.white70),
+              ),
             ],
             if (school.operator != null) ...[
               const SizedBox(height: 6),
@@ -104,11 +122,22 @@ class SchoolPopup extends ConsumerWidget {
                   children: [
                     Text(
                       'Khu vực: ${stats.region} (${stats.sampleSize} mẫu)',
-                      style: const TextStyle(color: Colors.white70, fontSize: 12),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    _StatBar(label: 'THPT', percent: thpt, color: Color(0xFF42A5F5)),
-                    _StatBar(label: 'Đại học', percent: uni, color: Color(0xFF66BB6A)),
+                    _StatBar(
+                      label: 'THPT',
+                      percent: thpt,
+                      color: Color(0xFF42A5F5),
+                    ),
+                    _StatBar(
+                      label: 'Đại học',
+                      percent: uni,
+                      color: Color(0xFF66BB6A),
+                    ),
                   ],
                 );
               },
@@ -140,7 +169,10 @@ class _InfoChip extends StatelessWidget {
         color: const Color(0xFF1565C0).withValues(alpha: 0.25),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(label, style: const TextStyle(color: Color(0xFF90CAF9), fontSize: 12)),
+      child: Text(
+        label,
+        style: const TextStyle(color: Color(0xFF90CAF9), fontSize: 12),
+      ),
     );
   }
 }

@@ -15,18 +15,54 @@ class AppTheme {
       cardColor: const Color(0xFF1E2128), // Background card
       textTheme: GoogleFonts.beVietnamProTextTheme(
         ThemeData.dark().textTheme.copyWith(
-          displayLarge: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          displayMedium: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          displaySmall: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          headlineLarge: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          headlineMedium: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          headlineSmall: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          titleLarge: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          titleMedium: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          titleSmall: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFFE8EAF0)),
-          bodyLarge: const TextStyle(fontWeight: FontWeight.w400, color: Color(0xFFE8EAF0)),
-          bodyMedium: const TextStyle(fontWeight: FontWeight.w400, color: Color(0xFFE8EAF0)),
-          bodySmall: const TextStyle(fontWeight: FontWeight.w400, color: Color(0xFF9AA0B0)),
+          displayLarge: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          displayMedium: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          displaySmall: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          headlineLarge: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          headlineMedium: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          headlineSmall: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          titleLarge: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          titleMedium: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          titleSmall: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Color(0xFFE8EAF0),
+          ),
+          bodyLarge: const TextStyle(
+            fontWeight: FontWeight.w400,
+            color: Color(0xFFE8EAF0),
+          ),
+          bodyMedium: const TextStyle(
+            fontWeight: FontWeight.w400,
+            color: Color(0xFFE8EAF0),
+          ),
+          bodySmall: const TextStyle(
+            fontWeight: FontWeight.w400,
+            color: Color(0xFF9AA0B0),
+          ),
         ),
       ),
     );

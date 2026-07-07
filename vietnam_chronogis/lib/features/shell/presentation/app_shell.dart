@@ -6,6 +6,7 @@ import '../../explorer/presentation/explorer_screen.dart';
 import '../../map/presentation/widgets/timeline_panel.dart';
 import '../../schools/presentation/schools_screen.dart';
 import '../../ai_chat/presentation/ai_insights_screen.dart';
+import '../../campaigns/presentation/campaigns_screen.dart';
 
 import '../../../shared/providers/map_provider.dart';
 import '../../../core/database/app_database.dart';
@@ -35,9 +36,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     // On mobile, the sidebar is inside a Drawer, so we don't need isSidebarExpanded for Row width.
 
     return Scaffold(
-      drawer: const Drawer(
-        child: SafeArea(child: SidebarWidget()),
-      ),
+      drawer: const Drawer(child: SafeArea(child: SidebarWidget())),
       body: Stack(
         children: [
           Column(
@@ -83,6 +82,10 @@ class _AppShellState extends ConsumerState<AppShell> {
         BottomNavigationBarItem(icon: Icon(Icons.explore), label: 'Explorer'),
         BottomNavigationBarItem(icon: Icon(Icons.school), label: 'Trường học'),
         BottomNavigationBarItem(icon: Icon(Icons.smart_toy), label: 'AI'),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.how_to_reg),
+          label: 'Campaigns',
+        ),
       ],
     );
   }
@@ -95,6 +98,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         ExplorerScreen(),
         SchoolsScreen(),
         AiInsightsScreen(),
+        CampaignsScreen(),
       ],
     );
   }

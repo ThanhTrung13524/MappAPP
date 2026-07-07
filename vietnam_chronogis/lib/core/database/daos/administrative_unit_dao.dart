@@ -6,7 +6,8 @@ import '../tables/administrative_units_table.dart';
 part 'administrative_unit_dao.g.dart';
 
 @DriftAccessor(tables: [AdministrativeUnits])
-class AdministrativeUnitDao extends DatabaseAccessor<AppDatabase> with _$AdministrativeUnitDaoMixin {
+class AdministrativeUnitDao extends DatabaseAccessor<AppDatabase>
+    with _$AdministrativeUnitDaoMixin {
   AdministrativeUnitDao(super.db);
 
   Future<void> upsertUnit(AdministrativeUnit unit) async {
@@ -20,60 +21,64 @@ class AdministrativeUnitDao extends DatabaseAccessor<AppDatabase> with _$Adminis
   }
 
   Future<List<AdministrativeUnit>> getAllProvinces() {
-    return (select(administrativeUnits)
-          ..where(
-            (t) =>
-                t.kind.equals('province') |
-                t.type.isIn(['Tỉnh', 'Thành phố', 'Tinh', 'Thanh pho']),
-          ))
+    return (select(administrativeUnits)..where(
+          (t) =>
+              t.kind.equals('province') |
+              t.type.isIn(['Tỉnh', 'Thành phố', 'Tinh', 'Thanh pho']),
+        ))
         .get();
   }
 
   Future<List<AdministrativeUnit>> getCommunesByProvince(String parentMa) {
     return (select(administrativeUnits)
           ..where((t) => t.kind.equals('commune') & t.parentMa.equals(parentMa))
-          ..orderBy([(t) => OrderingTerm(expression: t.ten, mode: OrderingMode.asc)]))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.ten, mode: OrderingMode.asc),
+          ]))
         .get();
   }
 
   Future<AdministrativeUnit?> getUnitByMa(String ma) async {
-    final list = await (select(administrativeUnits)
-          ..where((t) => t.ma.equals(ma))
-          ..limit(1))
-        .get();
+    final list =
+        await (select(administrativeUnits)
+              ..where((t) => t.ma.equals(ma))
+              ..limit(1))
+            .get();
     return list.isNotEmpty ? list.first : null;
   }
 
   Future<List<AdministrativeUnit>> getProvincesByRegion(String region) {
-    return (select(administrativeUnits)
-          ..where(
-            (t) =>
-                (t.kind.equals('province') |
-                    t.type.isIn(['Tỉnh', 'Thành phố', 'Tinh', 'Thanh pho'])) &
-                t.macroRegion.equals(region),
-          ))
+    return (select(administrativeUnits)..where(
+          (t) =>
+              (t.kind.equals('province') |
+                  t.type.isIn(['Tỉnh', 'Thành phố', 'Tinh', 'Thanh pho'])) &
+              t.macroRegion.equals(region),
+        ))
         .get();
   }
 
   Future<List<AdministrativeUnit>> searchUnits(String query) async {
     if (query.trim().isEmpty) return [];
-    
-    final allUnits = await (select(administrativeUnits)
-          ..where(
-            (t) =>
-                t.kind.isIn(['province', 'commune']) |
-                t.type.isIn(['Tỉnh', 'Thành phố', 'Tinh', 'Thanh pho']),
-          ))
-        .get();
+
+    final allUnits =
+        await (select(administrativeUnits)..where(
+              (t) =>
+                  t.kind.isIn(['province', 'commune']) |
+                  t.type.isIn(['Tỉnh', 'Thành phố', 'Tinh', 'Thanh pho']),
+            ))
+            .get();
 
     final normalizedQuery = _normalizeVietnamese(query);
 
-    return allUnits.where((unit) {
-      final normalizedTen = _normalizeVietnamese(unit.ten);
-      final normalizedTenShort = _normalizeVietnamese(unit.tenShort);
-      return normalizedTen.contains(normalizedQuery) ||
-          normalizedTenShort.contains(normalizedQuery);
-    }).take(10).toList();
+    return allUnits
+        .where((unit) {
+          final normalizedTen = _normalizeVietnamese(unit.ten);
+          final normalizedTenShort = _normalizeVietnamese(unit.tenShort);
+          return normalizedTen.contains(normalizedQuery) ||
+              normalizedTenShort.contains(normalizedQuery);
+        })
+        .take(10)
+        .toList();
   }
 
   String _normalizeVietnamese(String input) {

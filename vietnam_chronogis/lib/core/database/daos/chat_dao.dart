@@ -15,14 +15,18 @@ class ChatDao extends DatabaseAccessor<AppDatabase> with _$ChatDaoMixin {
 
   Future<List<ChatHistoryMessage>> getRecentMessages({int limit = 50}) {
     return (select(chatHistoryMessages)
-          ..orderBy([(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.asc)])
+          ..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.timestamp, mode: OrderingMode.asc),
+          ])
           ..limit(limit))
         .get();
   }
 
   Stream<List<ChatHistoryMessage>> watchAllMessages() {
-    return (select(chatHistoryMessages)
-          ..orderBy([(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.asc)]))
+    return (select(chatHistoryMessages)..orderBy([
+          (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.asc),
+        ]))
         .watch();
   }
 

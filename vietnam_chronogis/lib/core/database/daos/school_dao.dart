@@ -15,8 +15,9 @@ class SchoolDao extends DatabaseAccessor<AppDatabase> with _$SchoolDaoMixin {
   }
 
   Future<List<School>> getAll() {
-    return (select(schools)..orderBy([(t) => OrderingTerm(expression: t.name)]))
-        .get();
+    return (select(
+      schools,
+    )..orderBy([(t) => OrderingTerm(expression: t.name)])).get();
   }
 
   Future<List<School>> getByProvince(String provinceMa) {
@@ -27,11 +28,31 @@ class SchoolDao extends DatabaseAccessor<AppDatabase> with _$SchoolDaoMixin {
   }
 
   Future<List<School>> getByType(String schoolType) {
-    return (select(schools)..where((t) => t.schoolType.equals(schoolType))).get();
+    return (select(
+      schools,
+    )..where((t) => t.schoolType.equals(schoolType))).get();
+  }
+
+  Future<List<School>> getInBounds({
+    double minLat = 8.0,
+    double maxLat = 23.5,
+    double minLon = 102.0,
+    double maxLon = 110.0,
+  }) {
+    return (select(schools)
+          ..where(
+            (t) =>
+                t.lat.isBetweenValues(minLat, maxLat) &
+                t.lon.isBetweenValues(minLon, maxLon),
+          )
+          ..orderBy([(t) => OrderingTerm(expression: t.name)]))
+        .get();
   }
 
   Future<School?> getByOsmId(int osmId) {
-    return (select(schools)..where((t) => t.osmId.equals(osmId))).getSingleOrNull();
+    return (select(
+      schools,
+    )..where((t) => t.osmId.equals(osmId))).getSingleOrNull();
   }
 
   Future<int> count() async {
@@ -42,18 +63,20 @@ class SchoolDao extends DatabaseAccessor<AppDatabase> with _$SchoolDaoMixin {
   }
 
   Future<List<School>> search(String queryText) async {
-    if (queryText.trim().isEmpty) return [];
-    final q = queryText.toLowerCase();
-    final all = await getAll();
-    return all
-        .where(
-          (s) =>
-              s.name.toLowerCase().contains(q) ||
-              (s.address?.toLowerCase().contains(q) ?? false) ||
-              (s.provinceName?.toLowerCase().contains(q) ?? false),
-        )
-        .take(50)
-        .toList();
+    final trimmedQuery = queryText.trim();
+    if (trimmedQuery.isEmpty) return [];
+
+    final likeQuery = '%$trimmedQuery%';
+    return (select(schools)
+          ..where(
+            (t) =>
+                t.name.like(likeQuery) |
+                t.address.like(likeQuery) |
+                t.provinceName.like(likeQuery),
+          )
+          ..orderBy([(t) => OrderingTerm(expression: t.name)])
+          ..limit(50))
+        .get();
   }
 
   Future<void> clearAll() => delete(schools).go();

@@ -13,8 +13,8 @@ class SeedingScreen extends ConsumerWidget {
 
     ref.listen(seedInitializationProvider, (previous, next) {
       if (next.value == true) {
-        // Once seeding is complete, navigate to map (AppShell)
-        context.go('/map');
+        // Once local seeding is complete, decide auth/map routing.
+        context.go('/auth');
       }
     });
 
@@ -43,9 +43,7 @@ class SeedingScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               const Text(
                 'Đang tải dữ liệu địa lý Vietnam...',
-                style: TextStyle(
-                  color: Color(0xFF9AA0B0),
-                ),
+                style: TextStyle(color: Color(0xFF9AA0B0)),
               ),
               const SizedBox(height: 24),
               seedState.when(
@@ -55,7 +53,9 @@ class SeedingScreen extends ConsumerWidget {
                     LinearProgressIndicator(
                       value: progress > 0 ? progress : null,
                       backgroundColor: const Color(0xFF1A1D23),
-                      valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF2D5A8E)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Color(0xFF2D5A8E),
+                      ),
                       minHeight: 8,
                       borderRadius: BorderRadius.circular(4),
                     ),

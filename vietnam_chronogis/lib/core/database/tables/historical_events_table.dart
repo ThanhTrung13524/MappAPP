@@ -8,5 +8,6 @@ class HistoricalEvents extends Table {
   IntColumn get startYear => integer()();
   IntColumn get endYear => integer().nullable()();
   TextColumn get eventType => text()(); // e.g. 'MERGER', 'SPLIT', 'POLICY'
-  TextColumn get relatedProvinceMas => text()(); // Comma-separated list of affected province `ma`s
+  TextColumn get relatedProvinceMas =>
+      text()(); // Comma-separated list of affected province `ma`s
 }

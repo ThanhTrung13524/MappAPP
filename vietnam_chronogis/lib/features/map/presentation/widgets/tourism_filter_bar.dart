@@ -50,7 +50,8 @@ class TourismFilterBar extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               InkWell(
-                onTap: () => ref.read(showTourismLayerProvider.notifier).toggle(),
+                onTap: () =>
+                    ref.read(showTourismLayerProvider.notifier).toggle(),
                 borderRadius: BorderRadius.circular(6),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
@@ -116,18 +117,27 @@ class TourismFilterBar extends ConsumerWidget {
                       context: context,
                       builder: (context) => AlertDialog(
                         backgroundColor: const Color(0xFF1A1D23),
-                        title: const Text('Tải lại dữ liệu', style: TextStyle(color: Colors.white)),
+                        title: const Text(
+                          'Tải lại dữ liệu',
+                          style: TextStyle(color: Colors.white),
+                        ),
                         content: const Text(
                           'Bạn có chắc chắn muốn tải lại toàn bộ dữ liệu địa điểm du lịch từ OpenStreetMap? Quá trình này có thể mất 1-2 phút.',
                           style: TextStyle(color: Colors.white70),
                         ),
                         actions: [
                           TextButton(
-                            child: const Text('Hủy', style: TextStyle(color: Colors.white38)),
+                            child: const Text(
+                              'Hủy',
+                              style: TextStyle(color: Colors.white38),
+                            ),
                             onPressed: () => Navigator.of(context).pop(false),
                           ),
                           TextButton(
-                            child: const Text('Đồng ý', style: TextStyle(color: Color(0xFF2D5A8E))),
+                            child: const Text(
+                              'Đồng ý',
+                              style: TextStyle(color: Color(0xFF2D5A8E)),
+                            ),
                             onPressed: () => Navigator.of(context).pop(true),
                           ),
                         ],

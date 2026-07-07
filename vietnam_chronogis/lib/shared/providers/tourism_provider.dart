@@ -99,16 +99,16 @@ final tourismMarkersProvider = FutureProvider<List<Marker>>((ref) async {
     unitDao: ref.watch(administrativeUnitDaoProvider),
     geoJsonDao: ref.watch(geoJsonDaoProvider),
   );
-  final allPlaces = await dao.getAll();
+  final candidatePlaces = await dao.getByCategories(activeCategories);
   debugPrint(
-    '🗺️ [TourismMarkers] loaded ${allPlaces.length} places; activeCategories=${activeCategories.length}',
+    '🗺️ [TourismMarkers] loaded ${candidatePlaces.length} places; activeCategories=${activeCategories.length}',
   );
 
   var acceptedByBoundary = 0;
   var acceptedByProvinceFallback = 0;
   var rejectedByBoundary = 0;
 
-  final filteredPlaces = allPlaces.where((p) {
+  final filteredPlaces = candidatePlaces.where((p) {
     final isActiveCategory = activeCategories.contains(p.category);
     if (!isActiveCategory) return false;
 

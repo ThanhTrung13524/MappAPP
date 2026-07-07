@@ -163,14 +163,18 @@ class VietnamGeoValidator {
     return polygon
         .whereType<List<dynamic>>()
         .map((ring) {
-          return ring.whereType<List<dynamic>>().where((point) {
-            return point.length >= 2 && point[0] is num && point[1] is num;
-          }).map((point) {
-            return LatLng(
-              (point[1] as num).toDouble(),
-              (point[0] as num).toDouble(),
-            );
-          }).toList();
+          return ring
+              .whereType<List<dynamic>>()
+              .where((point) {
+                return point.length >= 2 && point[0] is num && point[1] is num;
+              })
+              .map((point) {
+                return LatLng(
+                  (point[1] as num).toDouble(),
+                  (point[0] as num).toDouble(),
+                );
+              })
+              .toList();
         })
         .where((ring) => ring.length >= 3)
         .toList();

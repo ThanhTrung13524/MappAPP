@@ -46,20 +46,30 @@ class TourismDao extends DatabaseAccessor<AppDatabase> with _$TourismDaoMixin {
   }
 
   Future<List<TourismPlace>> getByCategory(String category) {
+    return (select(
+      tourismPlaces,
+    )..where((t) => t.category.equals(category))).get();
+  }
+
+  Future<List<TourismPlace>> getByCategories(Set<String> categories) {
+    if (categories.isEmpty) return Future.value(const <TourismPlace>[]);
+
     return (select(tourismPlaces)
-          ..where((t) => t.category.equals(category)))
+          ..where((t) => t.category.isIn(categories))
+          ..orderBy([(t) => OrderingTerm(expression: t.name)]))
         .get();
   }
 
   Future<List<TourismPlace>> getWorldHeritage() {
-    return (select(tourismPlaces)
-          ..where((t) => t.category.equals('worldHeritage')))
-        .get();
+    return (select(
+      tourismPlaces,
+    )..where((t) => t.category.equals('worldHeritage'))).get();
   }
 
   Future<TourismPlace?> getByOsmId(int osmId) {
-    return (select(tourismPlaces)..where((t) => t.osmId.equals(osmId)))
-        .getSingleOrNull();
+    return (select(
+      tourismPlaces,
+    )..where((t) => t.osmId.equals(osmId))).getSingleOrNull();
   }
 
   Future<int> count() async {
@@ -74,16 +84,20 @@ class TourismDao extends DatabaseAccessor<AppDatabase> with _$TourismDaoMixin {
   // ─── Search ──────────────────────────────────────────
 
   Future<List<TourismPlace>> search(String query) async {
-    if (query.trim().isEmpty) return [];
-    final all = await getAll();
-    final q = query.toLowerCase();
-    return all
-        .where((p) =>
-            p.name.toLowerCase().contains(q) ||
-            (p.nameEn?.toLowerCase().contains(q) ?? false) ||
-            (p.category.contains(q)))
-        .take(20)
-        .toList();
+    final trimmedQuery = query.trim();
+    if (trimmedQuery.isEmpty) return [];
+
+    final likeQuery = '%$trimmedQuery%';
+    return (select(tourismPlaces)
+          ..where(
+            (t) =>
+                t.name.like(likeQuery) |
+                t.nameEn.like(likeQuery) |
+                t.category.like(likeQuery),
+          )
+          ..orderBy([(t) => OrderingTerm(expression: t.name)])
+          ..limit(20))
+        .get();
   }
 
   // ─── Bbox query (viewport) ───────────────────────────
@@ -94,10 +108,11 @@ class TourismDao extends DatabaseAccessor<AppDatabase> with _$TourismDaoMixin {
     required double minLon,
     required double maxLon,
   }) {
-    return (select(tourismPlaces)
-          ..where((t) =>
+    return (select(tourismPlaces)..where(
+          (t) =>
               t.lat.isBetweenValues(minLat, maxLat) &
-              t.lon.isBetweenValues(minLon, maxLon)))
+              t.lon.isBetweenValues(minLon, maxLon),
+        ))
         .get();
   }
 
@@ -107,12 +122,13 @@ class TourismDao extends DatabaseAccessor<AppDatabase> with _$TourismDaoMixin {
     double lonMin = 102.0,
     double lonMax = 110.0,
   }) {
-    return (delete(tourismPlaces)
-          ..where((t) =>
+    return (delete(tourismPlaces)..where(
+          (t) =>
               t.lat.isSmallerThanValue(latMin) |
               t.lat.isBiggerThanValue(latMax) |
               t.lon.isSmallerThanValue(lonMin) |
-              t.lon.isBiggerThanValue(lonMax)))
+              t.lon.isBiggerThanValue(lonMax),
+        ))
         .go();
   }
 
@@ -130,23 +146,29 @@ class TourismDao extends DatabaseAccessor<AppDatabase> with _$TourismDaoMixin {
     double lonMin = 102.0,
     double lonMax = 110.0,
     List<String> excludedCategories = const [
-      'beach', 'nationalPark', 'national_park', 'nature',
-      'natural_park', 'nature_reserve',
+      'beach',
+      'nationalPark',
+      'national_park',
+      'nature',
+      'natural_park',
+      'nature_reserve',
     ],
   }) async {
     // Xóa nằm ngoài bbox Việt Nam
-    final outsideCount = await (delete(tourismPlaces)
-          ..where((t) =>
-              t.lat.isSmallerThanValue(latMin) |
-              t.lat.isBiggerThanValue(latMax) |
-              t.lon.isSmallerThanValue(lonMin) |
-              t.lon.isBiggerThanValue(lonMax)))
-        .go();
+    final outsideCount =
+        await (delete(tourismPlaces)..where(
+              (t) =>
+                  t.lat.isSmallerThanValue(latMin) |
+                  t.lat.isBiggerThanValue(latMax) |
+                  t.lon.isSmallerThanValue(lonMin) |
+                  t.lon.isBiggerThanValue(lonMax),
+            ))
+            .go();
 
     // Xóa các category bị loại bỏ
-    final categoryCount = await (delete(tourismPlaces)
-          ..where((t) => t.category.isIn(excludedCategories)))
-        .go();
+    final categoryCount = await (delete(
+      tourismPlaces,
+    )..where((t) => t.category.isIn(excludedCategories))).go();
 
     return outsideCount + categoryCount;
   }

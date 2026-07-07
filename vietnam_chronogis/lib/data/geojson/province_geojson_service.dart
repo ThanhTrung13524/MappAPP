@@ -12,8 +12,8 @@ class ProvinceGeoJsonService {
   ProvinceGeoJsonService({
     required AdministrativeUnitDao unitDao,
     required GeoJsonDao geoJsonDao,
-  })  : _unitDao = unitDao,
-        _geoJsonDao = geoJsonDao;
+  }) : _unitDao = unitDao,
+       _geoJsonDao = geoJsonDao;
 
   final AdministrativeUnitDao _unitDao;
   final GeoJsonDao _geoJsonDao;
@@ -30,7 +30,9 @@ class ProvinceGeoJsonService {
 
     final provinces = await _unitDao.getAllProvinces();
     if (provinces.isEmpty) {
-      debugPrint('[ProvinceGeoJsonService] No province rows in DB to match GADM');
+      debugPrint(
+        '[ProvinceGeoJsonService] No province rows in DB to match GADM',
+      );
       return;
     }
 
@@ -58,17 +60,24 @@ class ProvinceGeoJsonService {
       await _cachePolygons('gadm_$normalizedGadmName', polygons);
       gadmCachedCount++;
 
-      final matchedProvinces = provinces.where((province) {
-        return _isProvinceMatch(province, normalizedGadmName);
-      }).toList(growable: false);
+      final matchedProvinces = provinces
+          .where((province) {
+            return _isProvinceMatch(province, normalizedGadmName);
+          })
+          .toList(growable: false);
 
       if (matchedProvinces.isEmpty) {
-        debugPrint('[ProvinceGeoJsonService] Unmatched GADM feature: $gadmName -> $normalizedGadmName');
+        debugPrint(
+          '[ProvinceGeoJsonService] Unmatched GADM feature: $gadmName -> $normalizedGadmName',
+        );
         continue;
       }
 
       for (final province in matchedProvinces) {
-        final bucket = mergedByProvince.putIfAbsent(province.ma, () => <List<List<LatLng>>>[]);
+        final bucket = mergedByProvince.putIfAbsent(
+          province.ma,
+          () => <List<List<LatLng>>>[],
+        );
         bucket.addAll(polygons);
         gadmMatchedCount++;
       }
@@ -93,38 +102,63 @@ class ProvinceGeoJsonService {
 
     try {
       final decoded = jsonDecode(cached.geoJsonData) as List<dynamic>;
-      return decoded.map((polygon) {
-        return (polygon as List<dynamic>).map((ring) {
-          return (ring as List<dynamic>).map((point) {
-            final pair = point as List<dynamic>;
-            if (pair.length < 2) {
-              return const LatLng(0, 0);
-            }
-            final lat = (pair[0] as num).toDouble();
-            final lon = (pair[1] as num).toDouble();
-            return LatLng(lat, lon);
-          }).where((point) => point.latitude != 0 || point.longitude != 0).toList(growable: false);
-        }).where((ring) => ring.length >= 3).toList(growable: false);
-      }).where((polygon) => polygon.isNotEmpty).toList(growable: false);
+      return decoded
+          .map((polygon) {
+            return (polygon as List<dynamic>)
+                .map((ring) {
+                  return (ring as List<dynamic>)
+                      .map((point) {
+                        final pair = point as List<dynamic>;
+                        if (pair.length < 2) {
+                          return const LatLng(0, 0);
+                        }
+                        final lat = (pair[0] as num).toDouble();
+                        final lon = (pair[1] as num).toDouble();
+                        return LatLng(lat, lon);
+                      })
+                      .where(
+                        (point) => point.latitude != 0 || point.longitude != 0,
+                      )
+                      .toList(growable: false);
+                })
+                .where((ring) => ring.length >= 3)
+                .toList(growable: false);
+          })
+          .where((polygon) => polygon.isNotEmpty)
+          .toList(growable: false);
     } catch (error) {
-      debugPrint('[ProvinceGeoJsonService] Failed to decode cached GeoJSON for $ma: $error');
+      debugPrint(
+        '[ProvinceGeoJsonService] Failed to decode cached GeoJSON for $ma: $error',
+      );
       return const [];
     }
   }
 
-  Future<void> _cachePolygons(String ma, List<List<List<LatLng>>> polygons) async {
+  Future<void> _cachePolygons(
+    String ma,
+    List<List<List<LatLng>>> polygons,
+  ) async {
     final coordinatesJson = jsonEncode(
-      polygons.map((polygon) {
-        return polygon.map((ring) {
-          return ring.map((point) => [point.latitude, point.longitude]).toList(growable: false);
-        }).toList(growable: false);
-      }).toList(growable: false),
+      polygons
+          .map((polygon) {
+            return polygon
+                .map((ring) {
+                  return ring
+                      .map((point) => [point.latitude, point.longitude])
+                      .toList(growable: false);
+                })
+                .toList(growable: false);
+          })
+          .toList(growable: false),
     );
 
     await _geoJsonDao.cacheGeoJson(ma, coordinatesJson);
   }
 
-  bool _isProvinceMatch(AdministrativeUnit province, String normalizedGadmName) {
+  bool _isProvinceMatch(
+    AdministrativeUnit province,
+    String normalizedGadmName,
+  ) {
     final candidates = <String>{};
     void addCandidate(String? value) {
       if (value == null || value.trim().isEmpty) return;
@@ -154,7 +188,8 @@ class ProvinceGeoJsonService {
       if (candidate.length < 4 || normalizedGadmName.length < 4) {
         return false;
       }
-      return candidate.contains(normalizedGadmName) || normalizedGadmName.contains(candidate);
+      return candidate.contains(normalizedGadmName) ||
+          normalizedGadmName.contains(candidate);
     });
   }
 
@@ -178,31 +213,139 @@ class ProvinceGeoJsonService {
 
   String _removeDiacritics(String value) {
     const replacements = <String, String>{
-      'á': 'a', 'à': 'a', 'ả': 'a', 'ã': 'a', 'ạ': 'a',
-      'ă': 'a', 'ắ': 'a', 'ằ': 'a', 'ẳ': 'a', 'ẵ': 'a', 'ặ': 'a',
-      'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ẩ': 'a', 'ẫ': 'a', 'ậ': 'a',
-      'é': 'e', 'è': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ẹ': 'e',
-      'ê': 'e', 'ế': 'e', 'ề': 'e', 'ể': 'e', 'ễ': 'e', 'ệ': 'e',
-      'í': 'i', 'ì': 'i', 'ỉ': 'i', 'ĩ': 'i', 'ị': 'i',
-      'ó': 'o', 'ò': 'o', 'ỏ': 'o', 'õ': 'o', 'ọ': 'o',
-      'ô': 'o', 'ố': 'o', 'ồ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ộ': 'o',
-      'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ở': 'o', 'ỡ': 'o', 'ợ': 'o',
-      'ú': 'u', 'ù': 'u', 'ủ': 'u', 'ũ': 'u', 'ụ': 'u',
-      'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ử': 'u', 'ữ': 'u', 'ự': 'u',
-      'ý': 'y', 'ỳ': 'y', 'ỷ': 'y', 'ỹ': 'y', 'ỵ': 'y',
+      'á': 'a',
+      'à': 'a',
+      'ả': 'a',
+      'ã': 'a',
+      'ạ': 'a',
+      'ă': 'a',
+      'ắ': 'a',
+      'ằ': 'a',
+      'ẳ': 'a',
+      'ẵ': 'a',
+      'ặ': 'a',
+      'â': 'a',
+      'ấ': 'a',
+      'ầ': 'a',
+      'ẩ': 'a',
+      'ẫ': 'a',
+      'ậ': 'a',
+      'é': 'e',
+      'è': 'e',
+      'ẻ': 'e',
+      'ẽ': 'e',
+      'ẹ': 'e',
+      'ê': 'e',
+      'ế': 'e',
+      'ề': 'e',
+      'ể': 'e',
+      'ễ': 'e',
+      'ệ': 'e',
+      'í': 'i',
+      'ì': 'i',
+      'ỉ': 'i',
+      'ĩ': 'i',
+      'ị': 'i',
+      'ó': 'o',
+      'ò': 'o',
+      'ỏ': 'o',
+      'õ': 'o',
+      'ọ': 'o',
+      'ô': 'o',
+      'ố': 'o',
+      'ồ': 'o',
+      'ổ': 'o',
+      'ỗ': 'o',
+      'ộ': 'o',
+      'ơ': 'o',
+      'ớ': 'o',
+      'ờ': 'o',
+      'ở': 'o',
+      'ỡ': 'o',
+      'ợ': 'o',
+      'ú': 'u',
+      'ù': 'u',
+      'ủ': 'u',
+      'ũ': 'u',
+      'ụ': 'u',
+      'ư': 'u',
+      'ứ': 'u',
+      'ừ': 'u',
+      'ử': 'u',
+      'ữ': 'u',
+      'ự': 'u',
+      'ý': 'y',
+      'ỳ': 'y',
+      'ỷ': 'y',
+      'ỹ': 'y',
+      'ỵ': 'y',
       'đ': 'd',
-      'Á': 'A', 'À': 'A', 'Ả': 'A', 'Ã': 'A', 'Ạ': 'A',
-      'Ă': 'A', 'Ắ': 'A', 'Ằ': 'A', 'Ẳ': 'A', 'Ẵ': 'A', 'Ặ': 'A',
-      'Â': 'A', 'Ấ': 'A', 'Ầ': 'A', 'Ẩ': 'A', 'Ẫ': 'A', 'Ậ': 'A',
-      'É': 'E', 'È': 'E', 'Ẻ': 'E', 'Ẽ': 'E', 'Ẹ': 'E',
-      'Ê': 'E', 'Ế': 'E', 'Ề': 'E', 'Ể': 'E', 'Ễ': 'E', 'Ệ': 'E',
-      'Í': 'I', 'Ì': 'I', 'Ỉ': 'I', 'Ĩ': 'I', 'Ị': 'I',
-      'Ó': 'O', 'Ò': 'O', 'Ỏ': 'O', 'Õ': 'O', 'Ọ': 'O',
-      'Ô': 'O', 'Ố': 'O', 'Ồ': 'O', 'Ổ': 'O', 'Ỗ': 'O', 'Ộ': 'O',
-      'Ơ': 'O', 'Ớ': 'O', 'Ờ': 'O', 'Ở': 'O', 'Ỡ': 'O', 'Ợ': 'O',
-      'Ú': 'U', 'Ù': 'U', 'Ủ': 'U', 'Ũ': 'U', 'Ụ': 'U',
-      'Ư': 'U', 'Ứ': 'U', 'Ừ': 'U', 'Ử': 'U', 'Ữ': 'U', 'Ự': 'U',
-      'Ý': 'Y', 'Ỳ': 'Y', 'Ỷ': 'Y', 'Ỹ': 'Y', 'Ỵ': 'Y',
+      'Á': 'A',
+      'À': 'A',
+      'Ả': 'A',
+      'Ã': 'A',
+      'Ạ': 'A',
+      'Ă': 'A',
+      'Ắ': 'A',
+      'Ằ': 'A',
+      'Ẳ': 'A',
+      'Ẵ': 'A',
+      'Ặ': 'A',
+      'Â': 'A',
+      'Ấ': 'A',
+      'Ầ': 'A',
+      'Ẩ': 'A',
+      'Ẫ': 'A',
+      'Ậ': 'A',
+      'É': 'E',
+      'È': 'E',
+      'Ẻ': 'E',
+      'Ẽ': 'E',
+      'Ẹ': 'E',
+      'Ê': 'E',
+      'Ế': 'E',
+      'Ề': 'E',
+      'Ể': 'E',
+      'Ễ': 'E',
+      'Ệ': 'E',
+      'Í': 'I',
+      'Ì': 'I',
+      'Ỉ': 'I',
+      'Ĩ': 'I',
+      'Ị': 'I',
+      'Ó': 'O',
+      'Ò': 'O',
+      'Ỏ': 'O',
+      'Õ': 'O',
+      'Ọ': 'O',
+      'Ô': 'O',
+      'Ố': 'O',
+      'Ồ': 'O',
+      'Ổ': 'O',
+      'Ỗ': 'O',
+      'Ộ': 'O',
+      'Ơ': 'O',
+      'Ớ': 'O',
+      'Ờ': 'O',
+      'Ở': 'O',
+      'Ỡ': 'O',
+      'Ợ': 'O',
+      'Ú': 'U',
+      'Ù': 'U',
+      'Ủ': 'U',
+      'Ũ': 'U',
+      'Ụ': 'U',
+      'Ư': 'U',
+      'Ứ': 'U',
+      'Ừ': 'U',
+      'Ử': 'U',
+      'Ữ': 'U',
+      'Ự': 'U',
+      'Ý': 'Y',
+      'Ỳ': 'Y',
+      'Ỷ': 'Y',
+      'Ỹ': 'Y',
+      'Ỵ': 'Y',
       'Đ': 'D',
     };
 

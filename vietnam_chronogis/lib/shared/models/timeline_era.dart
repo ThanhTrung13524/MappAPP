@@ -20,8 +20,10 @@ enum VietnamEra {
   }
 
   static VietnamEra fromYear(int year) {
-    return VietnamEra.values.firstWhere((era) => era.contains(year),
-        orElse: () => VietnamEra.merger2025);
+    return VietnamEra.values.firstWhere(
+      (era) => era.contains(year),
+      orElse: () => VietnamEra.merger2025,
+    );
   }
 }
 

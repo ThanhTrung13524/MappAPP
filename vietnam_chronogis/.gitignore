@@ -46,3 +46,7 @@ app.*.map.json
 
 # Local API keys (copy from dart_defines.example.json)
 dart_defines.json
+
+# Firebase Functions local artifacts
+functions/node_modules/
+functions/lib/

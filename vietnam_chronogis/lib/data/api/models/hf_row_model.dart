@@ -29,7 +29,9 @@ abstract class HfRowModel with _$HfRowModel {
     @JsonKey(name: 'geom_type') String? geomType,
     @JsonKey(name: 'n_vertices') int? nVertices,
     @JsonKey(name: 'macro_region') required String macroRegion,
-    @JsonKey(name: 'predecessors_list') @Default([]) List<String> predecessorsList,
+    @JsonKey(name: 'predecessors_list')
+    @Default([])
+    List<String> predecessorsList,
     @JsonKey(name: 'n_predecessors') required int nPredecessors,
     @JsonKey(name: 'embed_text') required String embedText,
     @Default([]) List<String> keywords,

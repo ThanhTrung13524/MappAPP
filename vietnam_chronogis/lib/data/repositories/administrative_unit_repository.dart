@@ -9,10 +9,10 @@ import '../../shared/providers/api_provider.dart';
 
 final administrativeUnitRepositoryProvider =
     Provider<AdministrativeUnitRepository>((ref) {
-  final apiClient = ref.watch(huggingFaceApiClientProvider);
-  final dao = ref.watch(administrativeUnitDaoProvider);
-  return AdministrativeUnitRepository(apiClient, dao);
-});
+      final apiClient = ref.watch(huggingFaceApiClientProvider);
+      final dao = ref.watch(administrativeUnitDaoProvider);
+      return AdministrativeUnitRepository(apiClient, dao);
+    });
 
 class AdministrativeUnitRepository {
   final HuggingFaceApiClient _apiClient;
@@ -31,36 +31,42 @@ class AdministrativeUnitRepository {
       final provinces = await _apiClient.fetchAll(config: 'provinces');
       yield 0.1;
 
-      await _dao.insertMultiple(provinces.map((p) => AdministrativeUnit(
-            id: p.id,
-            kind: p.kind,
-            ma: p.ma,
-            ten: p.ten,
-            type: p.type,
-            tenShort: p.tenShort,
-            areaKm2: p.areaKm2,
-            population: p.population,
-            density: p.density,
-            capital: p.capital,
-            address: p.address,
-            phone: p.phone,
-            decree: p.decree,
-            decreeUrl: p.decreeUrl,
-            predecessors: p.predecessors,
-            parentMa: p.parentMa,
-            parentTen: p.parentTen,
-            centroidLon: p.centroidLon,
-            centroidLat: p.centroidLat,
-            bbox: p.bbox,
-            geomType: p.geomType,
-            nVertices: p.nVertices,
-            macroRegion: p.macroRegion,
-            predecessorsList: p.predecessorsList,
-            nPredecessors: p.nPredecessors,
-            embedText: p.embedText,
-            keywords: p.keywords,
-            parentTenXa: p.parentTenXa,
-          )).toList());
+      await _dao.insertMultiple(
+        provinces
+            .map(
+              (p) => AdministrativeUnit(
+                id: p.id,
+                kind: p.kind,
+                ma: p.ma,
+                ten: p.ten,
+                type: p.type,
+                tenShort: p.tenShort,
+                areaKm2: p.areaKm2,
+                population: p.population,
+                density: p.density,
+                capital: p.capital,
+                address: p.address,
+                phone: p.phone,
+                decree: p.decree,
+                decreeUrl: p.decreeUrl,
+                predecessors: p.predecessors,
+                parentMa: p.parentMa,
+                parentTen: p.parentTen,
+                centroidLon: p.centroidLon,
+                centroidLat: p.centroidLat,
+                bbox: p.bbox,
+                geomType: p.geomType,
+                nVertices: p.nVertices,
+                macroRegion: p.macroRegion,
+                predecessorsList: p.predecessorsList,
+                nPredecessors: p.nPredecessors,
+                embedText: p.embedText,
+                keywords: p.keywords,
+                parentTenXa: p.parentTenXa,
+              ),
+            )
+            .toList(),
+      );
 
       yield 0.3;
 
@@ -108,8 +114,7 @@ class AdministrativeUnitRepository {
     }
   }
 
-  static List<String> cleanPredecessorsList(
-      List<String> raw, String kind) {
+  static List<String> cleanPredecessorsList(List<String> raw, String kind) {
     if (kind != 'commune') return raw;
     return raw.where((item) {
       if (item.trim() == 'TN') return false;

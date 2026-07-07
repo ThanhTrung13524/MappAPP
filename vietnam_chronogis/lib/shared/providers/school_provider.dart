@@ -49,35 +49,35 @@ final schoolMarkersProvider = FutureProvider<List<Marker>>((ref) async {
     unitDao: ref.watch(administrativeUnitDaoProvider),
     geoJsonDao: ref.watch(geoJsonDaoProvider),
   );
-  final schools = await dao.getAll();
+  final schools = await dao.getInBounds();
 
-  return schools.where((s) => validator.isInsideVietnamBBox(s.lat, s.lon)).map(
-    (school) {
-      return Marker(
-        point: LatLng(school.lat, school.lon),
-        width: 34,
-        height: 34,
-        child: GestureDetector(
-          onTap: () => ref.read(selectedSchoolProvider.notifier).select(school),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF1565C0),
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 1.5),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black38,
-                  blurRadius: 6,
-                  offset: Offset(0, 3),
-                ),
-              ],
-            ),
-            child: const Icon(Icons.school, color: Colors.white, size: 18),
+  return schools.where((s) => validator.isInsideVietnamBBox(s.lat, s.lon)).map((
+    school,
+  ) {
+    return Marker(
+      point: LatLng(school.lat, school.lon),
+      width: 34,
+      height: 34,
+      child: GestureDetector(
+        onTap: () => ref.read(selectedSchoolProvider.notifier).select(school),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1565C0),
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 1.5),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black38,
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
           ),
+          child: const Icon(Icons.school, color: Colors.white, size: 18),
         ),
-      );
-    },
-  ).toList();
+      ),
+    );
+  }).toList();
 });
 
 final schoolsListProvider = FutureProvider<List<School>>((ref) async {
@@ -95,10 +95,10 @@ final nemotronApiClientProvider = Provider<NemotronApiClient>((ref) {
 
 final schoolEducationStatsProvider =
     FutureProvider.family<EducationStats?, String?>((ref, region) async {
-  if (region == null || region.isEmpty) return null;
-  final client = ref.watch(nemotronApiClientProvider);
-  return client.fetchEducationStatsForRegion(region);
-});
+      if (region == null || region.isEmpty) return null;
+      final client = ref.watch(nemotronApiClientProvider);
+      return client.fetchEducationStatsForRegion(region);
+    });
 
 String schoolTypeLabel(String type) {
   switch (type) {

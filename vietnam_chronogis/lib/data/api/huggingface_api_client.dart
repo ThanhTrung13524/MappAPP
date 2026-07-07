@@ -32,7 +32,7 @@ class HuggingFaceApiClient {
             'length': length,
           },
         );
-        
+
         return HuggingFaceResponse.fromJson(response.data);
       } catch (e) {
         retries--;
@@ -51,10 +51,15 @@ class HuggingFaceApiClient {
 
     while (hasMore) {
       debugPrint('Fetching $config offset $offset...');
-      final response = await fetchRows(config: config, split: 'train', offset: offset, length: limit);
-      
+      final response = await fetchRows(
+        config: config,
+        split: 'train',
+        offset: offset,
+        length: limit,
+      );
+
       allRows.addAll(response.rows.map((r) => r.row));
-      
+
       offset += limit;
       if (allRows.length >= response.numRowsTotal) {
         hasMore = false;
