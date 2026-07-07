@@ -13,6 +13,8 @@ analyzer:
   exclude:
     - overpass_run.dart
     - scripts/**
+    - functions/lib/**
+    - functions/node_modules/**
 
 linter:
   # The lint rules applied to this project can be customized in the
