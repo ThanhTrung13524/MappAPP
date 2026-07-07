@@ -49,9 +49,7 @@ class CheckInRepository {
       accuracy: position.accuracy,
     );
 
-    final callable = requireFirebase(
-      _functions,
-    ).httpsCallable('validateEventCheckIn');
+    final callable = requireFirebase(_functions).httpsCallable('checkInEvent');
     final response = await callable.call(request.toCallableData());
     return CheckInResult.fromCallable(response.data);
   }

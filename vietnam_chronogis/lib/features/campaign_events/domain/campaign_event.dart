@@ -6,6 +6,7 @@ class CampaignEvent {
   const CampaignEvent({
     required this.id,
     required this.campaignId,
+    required this.schoolId,
     required this.name,
     required this.description,
     required this.startAt,
@@ -21,6 +22,7 @@ class CampaignEvent {
 
   final String id;
   final String campaignId;
+  final String schoolId;
   final String name;
   final String description;
   final DateTime startAt;
@@ -46,6 +48,7 @@ class CampaignEvent {
     return CampaignEvent(
       id: snapshot.id,
       campaignId: campaignId,
+      schoolId: data['schoolId'] as String? ?? '',
       name: data['name'] as String? ?? '',
       description: data['description'] as String? ?? '',
       startAt: _dateFromFirestore(data['startAt']) ?? now,
@@ -67,6 +70,7 @@ class CampaignEvent {
   Map<String, Object?> toCreateMap({required String createdBy}) {
     return {
       'name': name,
+      'schoolId': schoolId,
       'description': description,
       'startAt': Timestamp.fromDate(startAt),
       'endAt': Timestamp.fromDate(endAt),
@@ -84,6 +88,7 @@ class CampaignEvent {
   Map<String, Object?> toUpdateMap() {
     return {
       'name': name,
+      'schoolId': schoolId,
       'description': description,
       'startAt': Timestamp.fromDate(startAt),
       'endAt': Timestamp.fromDate(endAt),

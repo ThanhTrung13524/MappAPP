@@ -59,6 +59,7 @@ class CampaignEventActionNotifier extends AsyncNotifier<void> {
 
   Future<void> createEvent({
     required String campaignId,
+    required String schoolId,
     required String name,
     required String description,
     required DateTime startAt,
@@ -78,6 +79,7 @@ class CampaignEventActionNotifier extends AsyncNotifier<void> {
             event: CampaignEvent(
               id: '',
               campaignId: campaignId,
+              schoolId: schoolId,
               name: name,
               description: description,
               startAt: startAt,

@@ -93,7 +93,7 @@ class _CampaignsScreenState extends ConsumerState<CampaignsScreen> {
             title: user == null ? 'Signed out' : 'Signed in',
             message: user == null
                 ? 'Open Login to sign in before creating or joining campaigns.'
-                : '${profile?.displayName ?? user.email ?? user.uid} • role=${profile?.globalRole.name ?? 'user'}',
+                : '${profile?.displayName ?? user.email ?? user.uid} - role=${profile?.globalRole.name ?? 'user'}',
           ),
           _Section(
             title: 'Managed schools',
@@ -376,7 +376,7 @@ class _CampaignCardState extends ConsumerState<_CampaignCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            '${widget.campaign.status.name} • owner ${widget.campaign.ownerId}',
+            '${widget.campaign.status.name} - owner ${widget.campaign.ownerId}',
             style: const TextStyle(color: Colors.white54, fontSize: 12),
           ),
           if (widget.campaign.description.isNotEmpty) ...[
@@ -395,6 +395,7 @@ class _CampaignCardState extends ConsumerState<_CampaignCard> {
           if (canManage)
             _EventForm(
               campaignId: widget.campaign.id,
+              schoolId: widget.campaign.schoolId,
               name: _eventName,
               description: _eventDescription,
               radius: _eventRadius,
@@ -441,7 +442,7 @@ class _ParticipantActions extends ConsumerWidget {
     final action = ref.watch(participantActionProvider);
     final text = participant == null
         ? 'Not joined'
-        : '${participant!.status.name} • ${participant!.role.name}';
+        : '${participant!.status.name} - ${participant!.role.name}';
     return Row(
       children: [
         Expanded(
@@ -464,12 +465,14 @@ class _ParticipantActions extends ConsumerWidget {
 class _EventForm extends ConsumerWidget {
   const _EventForm({
     required this.campaignId,
+    required this.schoolId,
     required this.name,
     required this.description,
     required this.radius,
   });
 
   final String campaignId;
+  final String schoolId;
   final TextEditingController name;
   final TextEditingController description;
   final TextEditingController radius;
@@ -504,6 +507,7 @@ class _EventForm extends ConsumerWidget {
                         .read(campaignEventActionProvider.notifier)
                         .createEvent(
                           campaignId: campaignId,
+                          schoolId: schoolId,
                           name: name.text,
                           description: description.text,
                           startAt: now,
@@ -579,7 +583,7 @@ class _ParticipantsPanel extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${participant.userId} • ${participant.status.name} • ${participant.role.name}',
+                  '${participant.userId} - ${participant.status.name} - ${participant.role.name}',
                   style: const TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ),
@@ -617,7 +621,7 @@ class _SchoolTile extends StatelessWidget {
       leading: const Icon(Icons.location_city, color: Color(0xFF4CAF50)),
       title: Text(school.name, style: const TextStyle(color: Colors.white)),
       subtitle: Text(
-        '${school.latitude}, ${school.longitude} • ${school.checkInRadiusMeters.toStringAsFixed(0)}m',
+        '${school.latitude}, ${school.longitude} - ${school.checkInRadiusMeters.toStringAsFixed(0)}m',
         style: const TextStyle(color: Colors.white54, fontSize: 12),
       ),
     );

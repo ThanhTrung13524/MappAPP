@@ -46,6 +46,33 @@ service cloud.firestore {
         && request.resource.data.status == 'active';
     }
 
+    function validManagedSchoolShape() {
+      return request.resource.data.name is string
+        && request.resource.data.address is string
+        && request.resource.data.location is latlng
+        && request.resource.data.checkInRadiusMeters is number
+        && request.resource.data.checkInRadiusMeters > 0
+        && request.resource.data.checkInRadiusMeters <= 1000
+        && request.resource.data.active is bool;
+    }
+
+    function participantCreateShape(campaignId, uid) {
+      return request.resource.data.userId == uid
+        && (
+          (
+            request.resource.data.status == 'pending'
+            && request.resource.data.role == 'participant'
+          )
+          || (
+            campaignDoc(campaignId).data.ownerId == request.auth.uid
+            && uid == request.auth.uid
+            && request.resource.data.status == 'approved'
+            && request.resource.data.role == 'owner'
+            && request.resource.data.approvedBy == request.auth.uid
+          )
+        );
+    }
+
     match /users/{uid} {
       allow read: if isSelf(uid) || isAdmin();
       allow create: if isSelf(uid) && userCreateShape(uid);
@@ -59,33 +86,40 @@ service cloud.firestore {
 
     match /managed_schools/{schoolId} {
       allow read: if isActiveUser();
-      allow create, update, delete: if isAdmin();
+      allow create: if isActiveUser()
+        && validManagedSchoolShape()
+        && request.resource.data.createdBy == request.auth.uid;
+      allow update: if isActiveUser()
+        && validManagedSchoolShape()
+        && request.resource.data.createdBy == resource.data.createdBy
+        && (resource.data.createdBy == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
     }
 
     match /campaigns/{campaignId} {
       allow read: if isActiveUser();
       allow create: if isActiveUser()
         && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.status == 'draft';
+        && request.resource.data.status in ['draft', 'published'];
       allow update: if isCampaignManager(campaignId);
       allow delete: if campaignDoc(campaignId).data.ownerId == request.auth.uid || isAdmin();
 
       match /events/{eventId} {
         allow read: if isActiveUser();
-        allow create, update, delete: if isCampaignManager(campaignId);
+        allow create, update: if isCampaignManager(campaignId)
+          && request.resource.data.schoolId is string;
+        allow delete: if isCampaignManager(campaignId);
       }
 
       match /participants/{uid} {
         allow read: if isSelf(uid) || isCampaignManager(campaignId);
         allow create: if isSelf(uid)
-          && request.resource.data.uid == uid
-          && request.resource.data.status == 'pending'
-          && request.resource.data.role == 'participant';
+          && participantCreateShape(campaignId, uid);
         allow update: if isCampaignManager(campaignId)
-          && request.resource.data.uid == uid
+          && request.resource.data.userId == uid
           && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'reviewedAt', 'reviewedBy', 'updatedAt'])
-          && request.resource.data.reviewedBy == request.auth.uid;
+            .hasOnly(['status', 'role', 'approvedAt', 'approvedBy', 'updatedAt'])
+          && request.resource.data.approvedBy == request.auth.uid;
         allow delete: if false;
       }
 

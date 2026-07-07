@@ -83,7 +83,27 @@ function assertString(value: unknown, fieldName: string): string {
   return value;
 }
 
-export const validateEventCheckIn = onCall(
+function readLocation(data: Record<string, unknown>, entityName: string): LatLng {
+  const location = data.location;
+  if (location instanceof GeoPoint) {
+    return {
+      latitude: location.latitude,
+      longitude: location.longitude,
+    };
+  }
+
+  return {
+    latitude: assertNumber(data.latitude, `${entityName}.latitude`),
+    longitude: assertNumber(data.longitude, `${entityName}.longitude`),
+  };
+}
+
+function isManagedSchoolActive(data: Record<string, unknown>): boolean {
+  if (typeof data.active === "boolean") return data.active;
+  return data.status === "active";
+}
+
+const checkInHandler = onCall(
   {
     region: "asia-southeast1",
     enforceAppCheck: process.env.ENFORCE_APP_CHECK === "true",
@@ -172,7 +192,10 @@ export const validateEventCheckIn = onCall(
         throw new HttpsError("failed-precondition", "Check-in window is closed.");
       }
 
-      const schoolId = assertString(campaign.schoolId, "campaign.schoolId");
+      const schoolId =
+        typeof event.schoolId === "string" && event.schoolId.trim().length > 0
+          ? event.schoolId.trim()
+          : assertString(campaign.schoolId, "campaign.schoolId");
       const schoolRef = db.collection("managed_schools").doc(schoolId);
       const schoolSnapshot = await transaction.get(schoolRef);
       if (!schoolSnapshot.exists) {
@@ -180,14 +203,11 @@ export const validateEventCheckIn = onCall(
       }
 
       const school = schoolSnapshot.data() ?? {};
-      if (school.status !== "active") {
+      if (!isManagedSchoolActive(school)) {
         throw new HttpsError("failed-precondition", "Managed school is inactive.");
       }
 
-      const schoolLocation: LatLng = {
-        latitude: assertNumber(school.latitude, "school.latitude"),
-        longitude: assertNumber(school.longitude, "school.longitude"),
-      };
+      const schoolLocation = readLocation(school, "school");
 
       const radiusMeters =
         typeof event.checkInRadiusMeters === "number"
@@ -219,11 +239,16 @@ export const validateEventCheckIn = onCall(
       });
 
       return {
+        success: true,
         ok: true,
         alreadyCheckedIn: false,
         distanceMeters,
         radiusMeters,
+        message: "Check-in completed.",
       };
     });
   },
 );
+
+export const checkInEvent = checkInHandler;
+export const validateEventCheckIn = checkInHandler;

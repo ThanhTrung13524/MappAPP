@@ -29,15 +29,25 @@ class ManagedSchool {
     DocumentSnapshot<Map<String, dynamic>> snapshot,
   ) {
     final data = snapshot.data() ?? <String, dynamic>{};
+    final location = data['location'];
+    final latitude = location is GeoPoint
+        ? location.latitude
+        : (data['latitude'] as num?)?.toDouble() ?? 0;
+    final longitude = location is GeoPoint
+        ? location.longitude
+        : (data['longitude'] as num?)?.toDouble() ?? 0;
+    final legacyStatus = data['status'];
     return ManagedSchool(
       id: snapshot.id,
       name: data['name'] as String? ?? '',
       address: data['address'] as String? ?? '',
-      latitude: (data['latitude'] as num?)?.toDouble() ?? 0,
-      longitude: (data['longitude'] as num?)?.toDouble() ?? 0,
+      latitude: latitude,
+      longitude: longitude,
       checkInRadiusMeters:
           (data['checkInRadiusMeters'] as num?)?.toDouble() ?? 100,
-      active: data['active'] as bool? ?? true,
+      active:
+          data['active'] as bool? ??
+          (legacyStatus is String ? legacyStatus == 'active' : true),
       createdBy: data['createdBy'] as String? ?? '',
       createdAt: _dateFromFirestore(data['createdAt']),
       updatedAt: _dateFromFirestore(data['updatedAt']),
@@ -48,8 +58,7 @@ class ManagedSchool {
     return {
       'name': name,
       'address': address,
-      'latitude': latitude,
-      'longitude': longitude,
+      'location': GeoPoint(latitude, longitude),
       'checkInRadiusMeters': checkInRadiusMeters,
       'active': active,
       'createdBy': createdBy,
@@ -62,8 +71,7 @@ class ManagedSchool {
     return {
       'name': name,
       'address': address,
-      'latitude': latitude,
-      'longitude': longitude,
+      'location': GeoPoint(latitude, longitude),
       'checkInRadiusMeters': checkInRadiusMeters,
       'active': active,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -82,6 +90,7 @@ class ManagedSchool {
       return 'Longitude must be -180..180.';
     }
     if (checkInRadiusMeters <= 0) return 'Radius must be greater than 0.';
+    if (checkInRadiusMeters > 1000) return 'Radius must be at most 1000m.';
     return null;
   }
 }

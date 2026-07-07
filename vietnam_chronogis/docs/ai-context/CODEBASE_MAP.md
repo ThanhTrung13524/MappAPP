@@ -37,7 +37,7 @@
   Google sign-in, sign-out, auth state, and profile creation.
 
 - `lib/features/managed_schools/domain/managed_school.dart`  
-  Campaign managed school model. This is separate from SQLite OSM `schools`.
+  Campaign managed school model. New Firestore writes use `location: GeoPoint`, `active`, `createdBy`, and `checkInRadiusMeters`; reads still tolerate legacy `latitude`/`longitude`.
 
 - `lib/features/managed_schools/data/managed_school_repository.dart`  
   Firestore managed school stream/create logic.
@@ -52,7 +52,7 @@
   Campaigns tab UI for managed schools, campaigns, events, participant review, and check-in.
 
 - `lib/features/campaign_events/domain/campaign_event.dart`  
-  Event model and status enum.
+  Event model and status enum. Events carry `schoolId` for event-scoped check-in validation.
 
 - `lib/features/campaign_events/data/campaign_event_repository.dart`  
   Event stream/create logic.
@@ -70,7 +70,7 @@
   Dart Haversine, coordinate, radius, and time-window helpers.
 
 - `lib/features/check_in/data/check_in_repository.dart`  
-  Geolocation permission/current location and callable Function invocation.
+  Geolocation permission/current location and callable `checkInEvent` invocation.
 
 ## Firebase backend
 
@@ -84,7 +84,7 @@
   Empty index file until real queries require composites.
 
 - `functions/src/index.ts`  
-  Callable `validateEventCheckIn` implementation.
+  Callable `checkInEvent` implementation, with legacy `validateEventCheckIn` alias. Validates auth, participant approval/role, campaign/event status, check-in time window, active managed school, radius, and writes server-side check-in history.
 
 - `functions/src/checkInValidation.ts`  
   Pure TypeScript validation helpers used by the Function and tests.
@@ -188,6 +188,9 @@
 
 - `test/check_in_validator_test.dart`  
   Dart check-in distance/radius/time-window tests.
+
+- `test/firebase_campaign_contract_test.dart`
+  Flutter contract tests for managed school GeoPoint writes, event `schoolId`, and callable check-in result parsing.
 
 - `test/groq_service_test.dart`  
   Verifies missing Groq key does not throw through provider setup.

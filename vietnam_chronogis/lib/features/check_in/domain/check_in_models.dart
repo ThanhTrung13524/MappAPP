@@ -38,7 +38,7 @@ class CheckInResult {
   factory CheckInResult.fromCallable(Object? data) {
     final map = data is Map ? data : const <Object?, Object?>{};
     return CheckInResult(
-      success: map['success'] == true,
+      success: map['success'] == true || map['ok'] == true,
       distanceMeters: (map['distanceMeters'] as num?)?.toDouble(),
       message: map['message'] as String? ?? 'Check-in completed.',
     );

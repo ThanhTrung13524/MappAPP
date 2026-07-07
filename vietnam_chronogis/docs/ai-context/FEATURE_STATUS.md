@@ -10,16 +10,16 @@ Status values are limited to: `Complete`, `Partial`, `Missing`, `Broken`, `Unkno
 | Login | Partial | `auth_repository.dart`, `login_screen.dart` | Firebase Auth + Google Sign-In | Analyze/test pass | Requires Firebase project and enabled Google provider for end-to-end use. |
 | Logout | Partial | `auth_repository.dart`, `login_screen.dart` | Firebase Auth | Analyze/test pass | Implemented, not backend-tested. |
 | User profile | Partial | `app_user_profile.dart`, `auth_repository.dart` | Firestore `users/{uid}` | Analyze/test pass | Default profile creation implemented. |
-| Managed school | Partial | `managed_school.dart`, `managed_school_repository.dart` | Firestore `managed_schools` | Analyze/test pass | Separate from SQLite OSM `schools`; rules allow admin writes only. |
-| Campaign creation | Partial | `campaign.dart`, `campaign_repository.dart`, `campaigns_screen.dart` | Firestore `campaigns` | Analyze/test pass | Creates owner participant. |
-| Event creation | Partial | `campaign_event.dart`, `campaign_event_repository.dart`, `campaigns_screen.dart` | Firestore subcollection | Analyze/test pass | Manager-only by rules. |
-| Join Campaign | Partial | `campaign_participant.dart`, `participant_repository.dart` | Firestore participants | Analyze/test pass | Creates pending request. |
-| Participant approval | Partial | `participant_repository.dart`, `campaigns_screen.dart` | Firestore participants | Analyze/test pass | Owner/organizer workflow implemented in UI/repository/rules. |
+| Managed school | Partial | `managed_school.dart`, `managed_school_repository.dart` | Firestore `managed_schools` | Analyze/test pass; contract test pass | Separate from SQLite OSM `schools`; new writes use `location: GeoPoint`, `active`, `createdBy`, and radius <= 1000m. |
+| Campaign creation | Partial | `campaign.dart`, `campaign_repository.dart`, `campaigns_screen.dart` | Firestore `campaigns` | Analyze/test pass | Creates campaign and owner participant; rules allow app-created `published` campaigns. |
+| Event creation | Partial | `campaign_event.dart`, `campaign_event_repository.dart`, `campaigns_screen.dart` | Firestore subcollection | Analyze/test pass; contract test pass | Events now write `schoolId`; manager-only by rules. |
+| Join Campaign | Partial | `campaign_participant.dart`, `participant_repository.dart` | Firestore participants | Analyze/test pass | Creates pending request using `userId`; rules aligned to this field. |
+| Participant approval | Partial | `participant_repository.dart`, `campaigns_screen.dart` | Firestore participants | Analyze/test pass | Owner/organizer workflow uses `approvedAt`/`approvedBy`; rules aligned to those fields. |
 | Campaign roles | Partial | `campaign_participant.dart`, `firestore.rules`, Function | Firestore + Functions | Analyze/test pass | Roles: owner, organizer, staff, participant. |
-| Check-in | Partial | `check_in_repository.dart`, `check_in_models.dart`, `campaigns_screen.dart` | Cloud Function + Firestore | Flutter validator tests, Functions tests | Client calls callable function; direct client check-in writes denied. |
+| Check-in | Partial | `check_in_repository.dart`, `check_in_models.dart`, `campaigns_screen.dart` | Cloud Function + Firestore | Flutter validator tests, contract tests, Functions tests | Client calls `checkInEvent`; Function also exports legacy `validateEventCheckIn`; direct client check-in writes denied. |
 | Location validation | Partial | `check_in_validator.dart`, `functions/src/checkInValidation.ts` | Client helper + Cloud Function | Flutter and Node tests pass | Radius/time helpers tested; end-to-end GPS/Firebase not tested. |
 | Check-in history | Partial | Firestore check-in subcollection | Firestore | Function build/test pass | Function writes history records; UI does not yet show history list. |
-| Security rules | Partial | `firestore.rules`, `firestore.indexes.json` | Firestore Rules | Not emulator-tested | Rules authored, but Firebase CLI unavailable in this environment. |
+| Security rules | Partial | `firestore.rules`, `firestore.indexes.json` | Firestore Rules | Analyze/test pass; not emulator-tested | Rules aligned to current app field names, but Firebase emulator verification is still missing. |
 | App Check | Partial | `firebase_bootstrap.dart`, `functions/src/index.ts` | App Check | Analyze/build pass | Debug activation attempt exists; production provider/enforcement not configured. |
 | Notifications | Missing | None | None | None | FCM not implemented in this task. |
 
@@ -41,14 +41,18 @@ Status values are limited to: `Complete`, `Partial`, `Missing`, `Broken`, `Unkno
 | Routing directions | Partial | `routing_provider.dart`, `osrm_service.dart` | OSRM public API | Analyze/test pass | No retry/user-facing error detail. |
 | CI | Partial | `.github/workflows/build.yml` | GitHub Actions/SonarQube | Local commands pass | Flutter/Dart commands use `working-directory: vietnam_chronogis`; hosted CI not observed. |
 
-## Verification on 2026-06-24
+## Verification on 2026-07-07
 
 | Command | Result |
 | --- | --- |
-| `flutter pub get` | Passed after dependency changes. |
-| `dart format --output=none --set-exit-if-changed .` | Passed after formatting. |
+| `flutter clean` | Passed. |
+| `flutter pub get` | Passed. 48 packages reported newer incompatible versions. |
+| `dart run build_runner build --delete-conflicting-outputs` | Passed; build_runner warned the option is now ignored and wrote generated outputs. |
+| `dart format .` | Passed. |
+| `dart format --output=none --set-exit-if-changed .` | Passed. |
 | `flutter analyze` | Passed. No issues found. |
-| `flutter test` | Passed. 13 tests passed. |
-| `npm install` in `functions/` | Passed, with 8 moderate npm audit findings and local Node v25 vs target Node 20 warning. |
+| `flutter test --reporter expanded` | Passed. 34 tests passed. |
+| `npm install` in `functions/` | Passed, with 9 moderate npm audit findings and local Node v25.2.1 vs target Node 20 warning. |
 | `npm run lint` in `functions/` | Passed. |
+| `npm run build` in `functions/` | Passed. |
 | `npm test` in `functions/` | Passed. 3 Node tests passed. |

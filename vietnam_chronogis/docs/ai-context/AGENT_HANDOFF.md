@@ -59,8 +59,12 @@ Main flow:
 - Auth gate/login/logout/profile creation added.
 - Firestore domain models and repositories added for managed schools, campaigns, events, participants, and check-ins.
 - Campaigns tab added to the shell.
-- Cloud Function `validateEventCheckIn` added.
+- Cloud Function `checkInEvent` added with `validateEventCheckIn` kept as a legacy alias.
 - Firestore rules added and direct client check-in writes denied.
+- Firebase Campaign/Event/check-in field contracts aligned on 2026-07-07:
+  managed school writes `location: GeoPoint` and `active`, event writes `schoolId`,
+  participant rules use `userId`/`approvedAt`/`approvedBy`, and callable results
+  include `success`.
 - Flutter check-in validator tests added.
 - Functions TypeScript validation tests added.
 
@@ -74,16 +78,20 @@ Main flow:
 - Production Android/iOS/macOS identifiers are still not chosen.
 - Map performance work is the next active phase.
 
-## Verification on 2026-06-24
+## Verification on 2026-07-07
 
+- `flutter clean`: passed.
 - `flutter pub get`: passed.
-- `dart format --output=none --set-exit-if-changed .`: passed after formatting.
+- `dart run build_runner build --delete-conflicting-outputs`: passed; option was ignored by current build_runner and generated outputs were unchanged in git status.
+- `dart format .`: passed.
+- `dart format --output=none --set-exit-if-changed .`: passed.
 - `flutter analyze`: passed.
-- `flutter test`: passed with 13 tests.
-- `npm install` in `functions/`: passed with 8 moderate audit findings and Node v25 vs target Node 20 warning.
+- `flutter test --reporter expanded`: passed with 34 tests.
+- `npm install` in `functions/`: passed with 9 moderate audit findings and Node v25.2.1 vs target Node 20 warning.
 - `npm run lint` in `functions/`: passed.
+- `npm run build` in `functions/`: passed.
 - `npm test` in `functions/`: passed with 3 Node tests.
-- Firebase CLI was not available; `npx firebase-tools@latest --version` timed out after 5 minutes.
+- Firebase CLI/emulator verification has not been run in this phase.
 
 ## Do not break
 
@@ -96,10 +104,10 @@ Main flow:
 
 ## Next recommended task
 
-Proceed with measured map performance and UX work:
+Configure a real Firebase project or emulator suite and run end-to-end verification:
 
-1. Create `docs/performance/MAP_BASELINE.md`.
-2. Measure what the local environment can actually measure.
-3. Optimize only bottlenecks with evidence.
-4. Keep `MapViewScreen` behavior stable during the first refactor pass.
-5. Create `docs/performance/MAP_AFTER_OPTIMIZATION.md` with before/after evidence.
+1. Add real Firebase client config files outside secrets policy mistakes.
+2. Enable Google Sign-In and deploy/test `checkInEvent`.
+3. Run Firestore Rules emulator tests for user, managed school, campaign, event,
+   participant approval, and denied direct check-in writes.
+4. Manually verify `/seed`, `/map`, Explorer, Schools, AI, Campaigns, and OSRM.
