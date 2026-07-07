@@ -2,106 +2,18 @@ import { initializeApp } from "firebase-admin/app";
 import {
   FieldValue,
   GeoPoint,
-  Timestamp,
   getFirestore,
 } from "firebase-admin/firestore";
 import { HttpsError, onCall } from "firebase-functions/v2/https";
 import {
-  haversineDistanceMeters,
-  isInsideRadius,
-  isInsideTimeWindow,
-  isValidCoordinate,
-  type LatLng,
-} from "./checkInValidation.js";
+  evaluateCheckInContext,
+  readPayload,
+  resolveSchoolId,
+} from "./checkInCore.js";
 
 initializeApp();
 
 const db = getFirestore();
-
-type CheckInPayload = {
-  campaignId: string;
-  eventId: string;
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-};
-
-function readString(data: Record<string, unknown>, key: string): string {
-  const value = data[key];
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new HttpsError("invalid-argument", `${key} is required.`);
-  }
-  return value.trim();
-}
-
-function readNumber(data: Record<string, unknown>, key: string): number {
-  const value = data[key];
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new HttpsError("invalid-argument", `${key} must be a number.`);
-  }
-  return value;
-}
-
-function readPayload(data: unknown): CheckInPayload {
-  if (data === null || typeof data !== "object" || Array.isArray(data)) {
-    throw new HttpsError("invalid-argument", "Check-in payload is invalid.");
-  }
-
-  const body = data as Record<string, unknown>;
-  const accuracyValue = body.accuracy;
-
-  return {
-    campaignId: readString(body, "campaignId"),
-    eventId: readString(body, "eventId"),
-    latitude: readNumber(body, "latitude"),
-    longitude: readNumber(body, "longitude"),
-    accuracy:
-      typeof accuracyValue === "number" && Number.isFinite(accuracyValue)
-        ? accuracyValue
-        : undefined,
-  };
-}
-
-function assertTimestamp(value: unknown, fieldName: string): Timestamp {
-  if (!(value instanceof Timestamp)) {
-    throw new HttpsError("failed-precondition", `${fieldName} is missing.`);
-  }
-  return value;
-}
-
-function assertNumber(value: unknown, fieldName: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new HttpsError("failed-precondition", `${fieldName} is missing.`);
-  }
-  return value;
-}
-
-function assertString(value: unknown, fieldName: string): string {
-  if (typeof value !== "string" || value.trim().length === 0) {
-    throw new HttpsError("failed-precondition", `${fieldName} is missing.`);
-  }
-  return value;
-}
-
-function readLocation(data: Record<string, unknown>, entityName: string): LatLng {
-  const location = data.location;
-  if (location instanceof GeoPoint) {
-    return {
-      latitude: location.latitude,
-      longitude: location.longitude,
-    };
-  }
-
-  return {
-    latitude: assertNumber(data.latitude, `${entityName}.latitude`),
-    longitude: assertNumber(data.longitude, `${entityName}.longitude`),
-  };
-}
-
-function isManagedSchoolActive(data: Record<string, unknown>): boolean {
-  if (typeof data.active === "boolean") return data.active;
-  return data.status === "active";
-}
 
 const checkInHandler = onCall(
   {
@@ -115,22 +27,6 @@ const checkInHandler = onCall(
     }
 
     const payload = readPayload(request.data);
-    const userLocation: LatLng = {
-      latitude: payload.latitude,
-      longitude: payload.longitude,
-    };
-
-    if (!isValidCoordinate(userLocation)) {
-      throw new HttpsError("invalid-argument", "User location is invalid.");
-    }
-
-    if (payload.accuracy !== undefined && payload.accuracy > 100) {
-      throw new HttpsError(
-        "failed-precondition",
-        "Location accuracy is too low for check-in.",
-      );
-    }
-
     const campaignRef = db.collection("campaigns").doc(payload.campaignId);
     const eventRef = campaignRef.collection("events").doc(payload.eventId);
     const participantRef = campaignRef.collection("participants").doc(uid);
@@ -161,74 +57,43 @@ const checkInHandler = onCall(
         throw new HttpsError("permission-denied", "Join this campaign first.");
       }
 
-      if (checkInSnapshot.exists) {
-        throw new HttpsError("already-exists", "This event is already checked in.");
-      }
-
       const campaign = campaignSnapshot.data() ?? {};
       const event = eventSnapshot.data() ?? {};
       const participant = participantSnapshot.data() ?? {};
 
-      if (!["published", "ongoing"].includes(assertString(campaign.status, "campaign.status"))) {
-        throw new HttpsError("failed-precondition", "Campaign is not open.");
+      if (checkInSnapshot.exists) {
+        throw new HttpsError("already-exists", "This event is already checked in.");
       }
 
-      if (!["published", "ongoing"].includes(assertString(event.status, "event.status"))) {
-        throw new HttpsError("failed-precondition", "Event is not open.");
-      }
-
-      if (participant.status !== "approved") {
-        throw new HttpsError("permission-denied", "Participant is not approved.");
-      }
-
-      if (!["participant", "staff", "organizer", "owner"].includes(String(participant.role))) {
-        throw new HttpsError("permission-denied", "Participant role cannot check in.");
-      }
-
-      const nowMillis = Date.now();
-      const openAt = assertTimestamp(event.checkInOpenAt, "event.checkInOpenAt");
-      const closeAt = assertTimestamp(event.checkInCloseAt, "event.checkInCloseAt");
-      if (!isInsideTimeWindow(nowMillis, openAt.toMillis(), closeAt.toMillis())) {
-        throw new HttpsError("failed-precondition", "Check-in window is closed.");
-      }
-
-      const schoolId =
-        typeof event.schoolId === "string" && event.schoolId.trim().length > 0
-          ? event.schoolId.trim()
-          : assertString(campaign.schoolId, "campaign.schoolId");
-      const schoolRef = db.collection("managed_schools").doc(schoolId);
+      const schoolRef = db.collection("managed_schools").doc(
+        resolveSchoolId(campaign, event),
+      );
       const schoolSnapshot = await transaction.get(schoolRef);
       if (!schoolSnapshot.exists) {
         throw new HttpsError("failed-precondition", "Managed school not found.");
       }
 
       const school = schoolSnapshot.data() ?? {};
-      if (!isManagedSchoolActive(school)) {
-        throw new HttpsError("failed-precondition", "Managed school is inactive.");
-      }
-
-      const schoolLocation = readLocation(school, "school");
-
-      const radiusMeters =
-        typeof event.checkInRadiusMeters === "number"
-          ? event.checkInRadiusMeters
-          : assertNumber(school.checkInRadiusMeters, "school.checkInRadiusMeters");
-
-      const distanceMeters = haversineDistanceMeters(userLocation, schoolLocation);
-      if (!isInsideRadius(userLocation, schoolLocation, radiusMeters)) {
-        throw new HttpsError("failed-precondition", "User is outside check-in radius.");
-      }
+      const decision = evaluateCheckInContext({
+        payload,
+        campaign,
+        event,
+        participant,
+        school,
+        checkInExists: false,
+        nowMillis: Date.now(),
+      });
 
       const serverNow = FieldValue.serverTimestamp();
       transaction.set(checkInRef, {
         uid,
         campaignId: payload.campaignId,
         eventId: payload.eventId,
-        schoolId,
+        schoolId: decision.schoolId,
         checkedInAt: serverNow,
         location: new GeoPoint(payload.latitude, payload.longitude),
         accuracy: payload.accuracy ?? null,
-        distanceMeters,
+        distanceMeters: decision.distanceMeters,
         source: "callable_validateEventCheckIn",
         createdAt: serverNow,
       });
@@ -242,8 +107,8 @@ const checkInHandler = onCall(
         success: true,
         ok: true,
         alreadyCheckedIn: false,
-        distanceMeters,
-        radiusMeters,
+        distanceMeters: decision.distanceMeters,
+        radiusMeters: decision.radiusMeters,
         message: "Check-in completed.",
       };
     });

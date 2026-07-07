@@ -36,7 +36,10 @@ service cloud.firestore {
       return isActiveUser()
         && (
           campaignDoc(campaignId).data.ownerId == request.auth.uid
-          || participantDoc(campaignId, request.auth.uid).data.role in ['owner', 'organizer']
+          || (
+            participantDoc(campaignId, request.auth.uid).data.status == 'approved'
+            && participantDoc(campaignId, request.auth.uid).data.role in ['owner', 'organizer']
+          )
         );
     }
 
@@ -47,7 +50,27 @@ service cloud.firestore {
     }
 
     function validManagedSchoolShape() {
-      return request.resource.data.name is string
+      return request.resource.data.keys().hasAll([
+          'name',
+          'address',
+          'location',
+          'checkInRadiusMeters',
+          'active',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'address',
+          'location',
+          'checkInRadiusMeters',
+          'active',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.name is string
         && request.resource.data.address is string
         && request.resource.data.location is latlng
         && request.resource.data.checkInRadiusMeters is number
@@ -71,6 +94,101 @@ service cloud.firestore {
             && request.resource.data.approvedBy == request.auth.uid
           )
         );
+    }
+
+    function validCampaignShape() {
+      return request.resource.data.keys().hasAll([
+          'title',
+          'description',
+          'schoolId',
+          'ownerId',
+          'status',
+          'startAt',
+          'endAt',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.keys().hasOnly([
+          'title',
+          'description',
+          'schoolId',
+          'ownerId',
+          'status',
+          'startAt',
+          'endAt',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.description is string
+        && request.resource.data.schoolId is string
+        && request.resource.data.ownerId is string
+        && request.resource.data.status in ['draft', 'published', 'ongoing', 'completed', 'cancelled']
+        && request.resource.data.startAt is timestamp
+        && request.resource.data.endAt is timestamp
+        && request.resource.data.startAt < request.resource.data.endAt;
+    }
+
+    function validCampaignUpdate() {
+      return validCampaignShape()
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    function validEventShape() {
+      return request.resource.data.keys().hasAll([
+          'name',
+          'schoolId',
+          'description',
+          'startAt',
+          'endAt',
+          'checkInOpenAt',
+          'checkInCloseAt',
+          'status',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.keys().hasOnly([
+          'name',
+          'schoolId',
+          'description',
+          'startAt',
+          'endAt',
+          'checkInOpenAt',
+          'checkInCloseAt',
+          'checkInRadiusMeters',
+          'status',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+        ])
+        && request.resource.data.name is string
+        && request.resource.data.schoolId is string
+        && request.resource.data.description is string
+        && request.resource.data.status in ['draft', 'published', 'ongoing', 'completed', 'cancelled']
+        && request.resource.data.createdBy is string
+        && request.resource.data.startAt is timestamp
+        && request.resource.data.endAt is timestamp
+        && request.resource.data.checkInOpenAt is timestamp
+        && request.resource.data.checkInCloseAt is timestamp
+        && request.resource.data.startAt < request.resource.data.endAt
+        && request.resource.data.checkInOpenAt <= request.resource.data.checkInCloseAt
+        && request.resource.data.checkInCloseAt <= request.resource.data.endAt
+        && (
+          !request.resource.data.keys().hasAny(['checkInRadiusMeters'])
+          || (
+            request.resource.data.checkInRadiusMeters is number
+            && request.resource.data.checkInRadiusMeters > 0
+            && request.resource.data.checkInRadiusMeters <= 1000
+          )
+        );
+    }
+
+    function validEventUpdate() {
+      return validEventShape()
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt;
     }
 
     match /users/{uid} {
@@ -99,15 +217,21 @@ service cloud.firestore {
     match /campaigns/{campaignId} {
       allow read: if isActiveUser();
       allow create: if isActiveUser()
+        && validCampaignShape()
         && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.status in ['draft', 'published'];
-      allow update: if isCampaignManager(campaignId);
+      allow update: if isCampaignManager(campaignId)
+        && validCampaignUpdate();
       allow delete: if campaignDoc(campaignId).data.ownerId == request.auth.uid || isAdmin();
 
       match /events/{eventId} {
         allow read: if isActiveUser();
         allow create, update: if isCampaignManager(campaignId)
-          && request.resource.data.schoolId is string;
+          && (
+            !exists(/databases/$(database)/documents/campaigns/$(campaignId)/events/$(eventId))
+            ? validEventShape()
+            : validEventUpdate()
+          );
         allow delete: if isCampaignManager(campaignId);
       }
 
@@ -117,6 +241,8 @@ service cloud.firestore {
           && participantCreateShape(campaignId, uid);
         allow update: if isCampaignManager(campaignId)
           && request.resource.data.userId == uid
+          && request.resource.data.status in ['approved', 'rejected']
+          && request.resource.data.role in ['participant', 'staff', 'organizer']
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['status', 'role', 'approvedAt', 'approvedBy', 'updatedAt'])
           && request.resource.data.approvedBy == request.auth.uid;
