@@ -22,9 +22,11 @@ jobs:
           channel: stable
 
       - name: Install dependencies
+        working-directory: vietnam_chronogis
         run: flutter pub get
 
       - name: Analyze
+        working-directory: vietnam_chronogis
         run: flutter analyze
 
       - name: SonarQube Scan
