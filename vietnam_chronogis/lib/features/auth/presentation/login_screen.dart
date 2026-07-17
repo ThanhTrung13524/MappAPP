@@ -27,39 +27,43 @@ class LoginScreen extends ConsumerWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 460),
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const Icon(
-                  Icons.verified_user,
-                  size: 56,
-                  color: Color(0xFF4A90E2),
+                  Icons.map_outlined,
+                  size: 72,
+                  color: Color(0xFF2D5A8E),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 const Text(
-                  'Vietnam ChronoGIS Account',
+                  'Vietnam ChronoGIS',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 28,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Sign in with Google to create your user profile and access online ChronoGIS features.',
+                  'Đăng nhập để đồng bộ dữ liệu và lưu cài đặt của bạn',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white60, height: 1.4),
+                  style: TextStyle(
+                    color: Color(0xFF9AA0B0),
+                    fontSize: 14,
+                    height: 1.4,
+                  ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 if (!isConfigured)
                   _StatusPanel(
                     icon: Icons.warning_amber_outlined,
                     color: const Color(0xFFFFB74D),
                     text:
-                        '${bootstrap.message}\nAdd Firebase config files, run FlutterFire configuration, then restart the app.',
+                        '${bootstrap.message}\nThêm google-services.json + firebase_options.dart, rồi khởi động lại app.',
                   ),
                 if (bootstrap.status == FirebaseBootstrapStatus.failed)
                   _StatusPanel(
@@ -73,36 +77,63 @@ class LoginScreen extends ConsumerWidget {
                     color: const Color(0xFFE24B4A),
                     text: action.error!,
                   ),
-                FilledButton.icon(
-                  onPressed: isConfigured && !action.isLoading
-                      ? () => ref
+                SizedBox(
+                  height: 52,
+                  child: FilledButton.icon(
+                    onPressed: isConfigured && !action.isLoading
+                        ? () => ref
                             .read(authActionProvider.notifier)
                             .signInWithGoogle()
-                      : null,
-                  icon: action.isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.login),
-                  label: const Text('Sign in with Google'),
+                        : null,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: const Color(0xFF1A1D23),
+                      disabledBackgroundColor: Colors.white24,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: action.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.g_mobiledata, size: 28),
+                    label: Text(
+                      action.isLoading
+                          ? 'Đang đăng nhập...'
+                          : 'Đăng nhập với Google',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 TextButton.icon(
                   onPressed: () => context.go('/map'),
                   icon: const Icon(Icons.map_outlined),
-                  label: const Text('Continue to ChronoGIS map'),
+                  label: const Text('Tiếp tục vào bản đồ (không đăng nhập)'),
                 ),
                 if (authState.value != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   TextButton.icon(
-                    onPressed: () =>
-                        ref.read(authActionProvider.notifier).signOut(),
+                    onPressed: action.isLoading
+                        ? null
+                        : () =>
+                            ref.read(authActionProvider.notifier).signOut(),
                     icon: const Icon(Icons.logout),
-                    label: const Text('Sign out'),
+                    label: const Text('Đăng xuất'),
                   ),
                 ],
+                const SizedBox(height: 16),
+                const Text(
+                  'Bằng việc đăng nhập, bạn đồng ý với điều khoản sử dụng của ứng dụng.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFF6B7280), fontSize: 12),
+                ),
               ],
             ),
           ),

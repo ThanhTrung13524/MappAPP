@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../../../core/firebase/firebase_bootstrap.dart';
+import '../../../firebase_options.dart';
 import '../domain/app_auth_user.dart';
 import '../domain/app_user_profile.dart';
 
@@ -132,7 +133,9 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   Future<void> _ensureGoogleInitialized() {
-    return _googleInit ??= GoogleSignIn.instance.initialize();
+    return _googleInit ??= GoogleSignIn.instance.initialize(
+      serverClientId: DefaultFirebaseOptions.googleWebClientId,
+    );
   }
 }
 
@@ -174,7 +177,7 @@ class AuthActionNotifier extends Notifier<AuthActionState> {
       await ref.read(authRepositoryProvider).signInWithGoogle();
       state = const AuthActionState();
     } catch (error) {
-      state = AuthActionState(error: error.toString());
+      state = AuthActionState(error: mapAuthError(error));
     }
   }
 
@@ -184,7 +187,38 @@ class AuthActionNotifier extends Notifier<AuthActionState> {
       await ref.read(authRepositoryProvider).signOut();
       state = const AuthActionState();
     } catch (error) {
-      state = AuthActionState(error: error.toString());
+      state = AuthActionState(error: mapAuthError(error));
     }
   }
+}
+
+String mapAuthError(Object error) {
+  final text = error.toString();
+  if (text.contains('ApiException: 10') || text.contains('DEVELOPER_ERROR')) {
+    return 'Cấu hình Google Sign-In sai (ApiException 10). '
+        'Kiểm tra SHA-1 trên Firebase Console khớp máy đang build, '
+        'và tải lại google-services.json.';
+  }
+  if (text.contains('ApiException: 7') || text.contains('NETWORK')) {
+    return 'Lỗi mạng. Kiểm tra kết nối Internet rồi thử lại.';
+  }
+  if (text.contains('Firebase is not configured') ||
+      text.contains('FirebaseNotConfiguredException')) {
+    return 'Firebase chưa cấu hình. Thêm google-services.json và firebase_options.dart.';
+  }
+  if (text.contains('ID token')) {
+    return 'Google không trả về ID token. Kiểm tra Web Client ID (GOOGLE_WEB_CLIENT_ID).';
+  }
+  if (error is FirebaseAuthException) {
+    return switch (error.code) {
+      'operation-not-allowed' =>
+        'Google Sign-In chưa được bật trong Firebase Console.',
+      'invalid-credential' =>
+        'Thông tin đăng nhập không hợp lệ. Kiểm tra cấu hình Firebase.',
+      'user-disabled' => 'Tài khoản đã bị vô hiệu hóa.',
+      'network-request-failed' => 'Lỗi mạng. Vui lòng thử lại.',
+      _ => error.message ?? 'Đăng nhập thất bại (${error.code}).',
+    };
+  }
+  return text;
 }

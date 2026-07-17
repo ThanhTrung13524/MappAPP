@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../map/presentation/map_view_screen.dart';
 import '../../explorer/presentation/explorer_screen.dart';
@@ -7,9 +8,11 @@ import '../../map/presentation/widgets/timeline_panel.dart';
 import '../../schools/presentation/schools_screen.dart';
 import '../../ai_chat/presentation/ai_insights_screen.dart';
 import '../../campaigns/presentation/campaigns_screen.dart';
+import '../../auth/data/auth_repository.dart';
 
 import '../../../shared/providers/map_provider.dart';
 import '../../../core/database/app_database.dart';
+import '../../../core/firebase/firebase_bootstrap.dart';
 
 // FIX: StateProvider<int> đã bị xóa trong Riverpod 3.x
 // Migration: StateProvider → Notifier + NotifierProvider
@@ -129,6 +132,9 @@ class _SidebarWidgetState extends ConsumerState<SidebarWidget> {
   @override
   Widget build(BuildContext context) {
     final searchQuery = ref.watch(mapSearchQueryProvider);
+    final authUser = ref.watch(authStateProvider).value;
+    final isConfigured = ref.watch(firebaseConfiguredProvider);
+    final isSigningOut = ref.watch(authActionProvider).isLoading;
 
     // Sync input field if cleared from other providers
     if (searchQuery.isEmpty && _searchController.text.isNotEmpty) {
@@ -198,6 +204,71 @@ class _SidebarWidgetState extends ConsumerState<SidebarWidget> {
                 : _buildSavedLocations(savedAdministrativeUnitsAsync),
           ),
           const Divider(height: 1, color: Colors.white12),
+          if (isConfigured && authUser != null)
+            ListTile(
+              dense: true,
+              leading: CircleAvatar(
+                radius: 16,
+                backgroundColor: const Color(0xFF2D5A8E),
+                backgroundImage: authUser.photoUrl != null
+                    ? NetworkImage(authUser.photoUrl!)
+                    : null,
+                child: authUser.photoUrl == null
+                    ? Text(
+                        (authUser.displayName ?? authUser.email ?? '?')
+                            .substring(0, 1)
+                            .toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                    : null,
+              ),
+              title: Text(
+                authUser.displayName ?? 'Người dùng',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Text(
+                authUser.email ?? '',
+                style: const TextStyle(color: Colors.white38, fontSize: 11),
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: isSigningOut
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : IconButton(
+                      icon: const Icon(
+                        Icons.logout,
+                        color: Colors.white54,
+                        size: 20,
+                      ),
+                      tooltip: 'Đăng xuất',
+                      onPressed: () async {
+                        await ref.read(authActionProvider.notifier).signOut();
+                        if (context.mounted) context.go('/login');
+                      },
+                    ),
+            )
+          else if (isConfigured)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.login, color: Colors.white54, size: 20),
+              title: const Text(
+                'Đăng nhập Google',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              onTap: () => context.go('/login'),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(

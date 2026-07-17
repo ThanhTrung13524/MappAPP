@@ -56,7 +56,7 @@ class AuthGateScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Text(
                 bootstrap.status == FirebaseBootstrapStatus.ready
-                    ? 'Checking authentication...'
+                    ? 'Đang kiểm tra đăng nhập...'
                     : bootstrap.message,
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.white70),

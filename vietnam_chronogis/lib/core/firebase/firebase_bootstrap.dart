@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../firebase_options.dart';
+
 enum FirebaseBootstrapStatus { ready, notConfigured, failed }
 
 class FirebaseBootstrapResult {
@@ -56,8 +58,13 @@ final firebaseConfiguredProvider = Provider<bool>((ref) {
 
 Future<FirebaseBootstrapResult> bootstrapFirebase() async {
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     return const FirebaseBootstrapResult.ready();
+  } on UnsupportedError catch (error) {
+    debugPrint('Firebase bootstrap skipped (unsupported platform): $error');
+    return FirebaseBootstrapResult.notConfigured(error);
   } on FirebaseException catch (error, stackTrace) {
     debugPrint('Firebase bootstrap skipped: ${error.code} ${error.message}');
     if (_looksLikeMissingConfiguration(error)) {
