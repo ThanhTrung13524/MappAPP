@@ -22,12 +22,15 @@ jobs:
           channel: stable
 
       - name: Install dependencies
+        working-directory: vietnam_chronogis
         run: flutter pub get
 
       - name: Analyze
+        working-directory: vietnam_chronogis
         run: flutter analyze
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
